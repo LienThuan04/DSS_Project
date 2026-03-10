@@ -1,189 +1,315 @@
-# 📊 Phân Tích Khách Hàng Rời Bỏ – Telco Customer Churn
+# DSS Antigravity - Customer Churn Decision Support System
 
-> **Môn học:** Hệ Trợ Giúp Quyết Định  
-> **Dữ liệu:** `WA_Fn-UseC_-Telco-Customer-Churn.csv` – 7,043 khách hàng viễn thông  
-> **File code chính:** `telco_churn_analysis.py`
+A telecom customer churn prediction system with **Machine Learning**, **Backend API**, and **React Dashboard**.
 
 ---
 
-## 🎯 Mục tiêu dự án
+## 📋 Prerequisites
 
-Dự án này giải quyết bài toán: **"Làm thế nào để công ty viễn thông dự đoán và ngăn chặn khách hàng rời bỏ (Churn)?"**
+Install these first:
 
-Toàn bộ phân tích được chia thành **3 phần** tương ứng với 3 vai trò chuyên môn:
+- **Node.js 18+** - [Download](https://nodejs.org/)
+- **Python 3.10+** - [Download](https://www.python.org/)
+- **MongoDB** - [Install locally](https://www.mongodb.com/try/download/community) or [Use Atlas (cloud)](https://www.mongodb.com/cloud/atlas)
 
-| Phần | Vai trò | Nội dung |
-|------|---------|---------|
-| 1 | 📋 Data Analyst | Làm sạch dữ liệu & vẽ biểu đồ |
-| 2 | 🤖 ML Engineer | Xây dựng mô hình dự đoán Churn |
-| 3 | 📌 Decision Support | Phân tích kết quả → Đề xuất chiến lược |
+Verify installation:
+```bash
+node --version    # Should be 18+
+python --version  # Should be 3.10+
+```
 
 ---
 
-## 🚀 Cách chạy code
+## � Installation (First Time Setup)
 
-### Bước 1 – Cài thư viện (chỉ cần làm 1 lần)
-Mở **Command Prompt** hoặc **PowerShell**, gõ lệnh sau:
+### After Cloning/Pulling the Project
 
-```
-pip install pandas numpy matplotlib scikit-learn imbalanced-learn
-```
+Run this **once** to install all dependencies:
 
-### Bước 2 – Chạy file phân tích
-Đảm bảo file CSV và file `.py` cùng nằm trong thư mục `DSS_Antigravity`, sau đó chạy:
-
-```
-python telco_churn_analysis.py
+#### Backend Dependencies
+```batch
+cd backend-nestjs
+npm install
 ```
 
-### Bước 3 – Xem kết quả
-Sau khi chạy xong, 3 file biểu đồ sẽ được tạo ra trong cùng thư mục:
+#### Frontend Dependencies
+```batch
+cd frontend-react
+npm install
+```
 
-| File ảnh | Nội dung |
-|----------|---------|
-| `chart1_churn_overview.png` | Biểu đồ tỷ lệ Churn tổng thể |
-| `chart2_confusion_matrix.png` | Ma trận nhầm lẫn của mô hình ML |
-| `chart3_feature_importance.png` | Top 5 yếu tố quan trọng nhất |
+#### ML API Dependencies
+```batch
+cd ml-python
+python -m venv venv
+venv\Scripts\activate
+pip install -r requirements.txt
+```
+
+**Or just run `start-all.bat` - it handles everything automatically!**
 
 ---
 
-## 📋 Phần 1 – Làm sạch dữ liệu (Data Cleaning)
+## �🚀 Quick Start (30 Seconds)
 
-### Vấn đề phát hiện
-Cột `TotalCharges` (Tổng tiền cước) chứa **11 ô trống** do khách hàng mới chưa có hóa đơn.
+### Run Everything with One Click
 
-### Cách xử lý
+**Just double-click this file:**
 ```
-Chuyển TotalCharges sang dạng số → Tìm giá trị median → Điền vào ô trống
+start-all.bat
 ```
-- **Median** được dùng thay vì **Mean (trung bình)** vì median không bị ảnh hưởng bởi các giá trị ngoại lệ (khách hàng chi cước rất cao hoặc rất thấp).
 
-### Nhóm biến `tenure` (thâm niên khách hàng)
-| Nhóm | Thời gian dùng dịch vụ |
-|------|------------------------|
-| 0–12 tháng | Khách hàng mới |
-| 13–24 tháng | Khách hàng trung niên |
-| 25–48 tháng | Khách hàng ổn định |
-| 49–72 tháng | Khách hàng trung thành |
+✅ Automatically starts:
+- **Backend (NestJS)** on http://localhost:3001
+- **Frontend (React)** on http://localhost:3000
+- **ML API (Python)** on http://localhost:5000
 
-### Kết quả biểu đồ (Phần 1)
-![Biểu đồ Phần 1](chart1_churn_overview.png)
-
-**3 insight chính từ biểu đồ:**
-
-1. **Contract (Loại hợp đồng):** Khách hàng hợp đồng **Month-to-month (hàng tháng)** có tỷ lệ Churn ~**43%** – cao gấp 9 lần khách hàng hợp đồng 2 năm (~5%). Lý do: không bị ràng buộc, dễ dàng chuyển nhà mạng.
-
-2. **InternetService (Dịch vụ Internet):** Khách dùng **Fiber optic** Churn ~**42%**, trong khi khách không dùng internet chỉ Churn ~**7%**. Lý do: cước cao → kỳ vọng chất lượng lớn, nếu thất vọng dễ bỏ.
-
-3. **Tenure (Thâm niên):** Nhóm **0–12 tháng** Churn ~**48%**, nhóm **49–72 tháng** chỉ ~**6%**. Kết luận: **6 tháng đầu là giai đoạn nguy hiểm nhất**.
+That's it! The browser will open automatically. Wait 1-2 minutes for all services to start.
 
 ---
 
-## 🤖 Phần 2 – Mô hình Machine Learning
-
-### Tại sao cần ML?
-Phân tích biểu đồ chỉ cho biết xu hướng chung. ML giúp **dự đoán từng khách hàng cụ thể** có khả năng Churn hay không, từ đó can thiệp kịp thời.
-
-### Quy trình
-
-#### Bước 1 – Mã hóa dữ liệu
-Máy tính không hiểu chữ, chỉ hiểu số. Vì vậy:
-- **LabelEncoder**: Chuyển cột 2 giá trị (Yes/No, Male/Female) → (1/0)
-- **get_dummies**: Chuyển cột nhiều giá trị (DSL / Fiber optic / No) → nhiều cột 0/1
-
-#### Bước 2 – Chia tập Train/Test (80/20)
-```
-7,043 khách hàng
-├── 80% = 5,634 hàng → dùng để "học" (Train)
-└── 20% = 1,409 hàng → dùng để "kiểm tra" (Test)
-```
-
-#### Bước 3 – SMOTE (xử lý mất cân bằng)
-Dữ liệu gốc: **73% không Churn, 27% Churn** → Mô hình sẽ bị thiên lệch, ngại dự đoán Churn.
-
-SMOTE (Synthetic Minority Over-sampling Technique) tạo thêm mẫu Churn giả lập để cân bằng thành **50%/50%** trước khi huấn luyện.
-
-#### Bước 4 – Random Forest
-- Mô hình **Random Forest** = tập hợp **200 cây quyết định**, mỗi cây bỏ phiếu → kết quả đa số thắng.
-- Ưu điểm: bền vững, không bị overfit, giải thích được qua Feature Importance.
-
-### Kết quả đánh giá mô hình
-
-```
-Accuracy: 79%  |  Recall (Churn): 60.4%  |  Precision: 60.3%
-```
-
-**Ma trận nhầm lẫn (Confusion Matrix):**
-![Confusion Matrix](chart2_confusion_matrix.png)
-
-| | Dự đoán: Không Churn | Dự đoán: Churn |
-|---|---|---|
-| **Thực tế: Không Churn** | ✅ TN = 886 (đúng) | ❌ FP = 149 (báo nhầm) |
-| **Thực tế: Churn** | ❌ FN = 148 (bỏ sót!) | ✅ TP = 226 (đúng) |
-
-### ⚠️ Tại sao tối ưu Recall thay vì Accuracy?
-
-> **Câu hỏi then chốt của Giảng viên – cần nắm vững!**
-
-**Tình huống thực tế:**
-- FN = 148: Mô hình **bỏ sót 148 khách hàng** thực sự sắp Churn, dự đoán nhầm là "ở lại" → Công ty không can thiệp → Mất khách.
-- Chi phí tìm khách hàng mới **gấp 5–7 lần** chi phí giữ chân khách cũ.
-
-**Accuracy bị "đánh lừa":**
-> Nếu mô hình cứ dự đoán "**Tất cả** đều không Churn" → Accuracy vẫn đạt **73%** vì dữ liệu gốc chỉ có 27% Churn. Nhưng mô hình đó hoàn toàn **vô dụng**.
-
-**Kết luận:** Trong bài toán giữ chân khách hàng, ta cần **Recall cao** để không bỏ sót khách hàng rủi ro. F1-Score được dùng để cân bằng giữa Recall và Precision.
-
----
-
-## 📌 Phần 3 – Hỗ Trợ Ra Quyết Định
-
-### Top 5 Yếu Tố Ảnh Hưởng Đến Churn
-![Feature Importance](chart3_feature_importance.png)
-
-| Hạng | Yếu tố | Tầm quan trọng | Ý nghĩa |
-|------|---------|---------------|---------|
-| 1 | `PaymentMethod_Electronic check` | 13.41% | Thanh toán bằng séc điện tử → rủi ro nhất |
-| 2 | `tenure` | 10.65% | Thâm niên càng ngắn → rủi ro càng cao |
-| 3 | `TotalCharges` | 9.05% | Tổng tiền đã trả thấp → chưa gắn kết |
-| 4 | `Contract_Two year` | 6.55% | Không ký HD 2 năm → dễ rời bỏ |
-| 5 | `PaperlessBilling` | 5.90% | Hóa đơn điện tử → ít tương tác trực tiếp |
-
-### Bảng Đề Xuất Chiến Lược Cho Giám Đốc Marketing
-
-| Phân khúc | Dấu hiệu nhận biết | Quyết định tác động | Lợi ích kỳ vọng |
-|-----------|-------------------|--------------------|--------------------|
-| 🔴 Khách mới M-to-M + Fiber (<12 tháng) | Hợp đồng tháng, dùng Fiber, thâm niên <1 năm | Offer khóa HD 1 năm, giảm 15% cước 3 tháng đầu, gọi Onboarding | Giảm Churn 20–30%, tăng LTV gấp 2x |
-| 🟠 Thanh toán Electronic check | PaymentMethod = Electronic, cước >$70/tháng | Khuyến khích chuyển Auto-pay, giảm $5/tháng | Giảm Churn 15%, giảm chậm thanh toán 40% |
-| 🟡 Không có Tech Support + Fiber | TechSupport = No, InternetService = Fiber | Tặng Tech Support miễn phí 3 tháng + chatbot 24/7 | Tăng NPS +15 điểm, giảm Churn 12% |
-| 🟣 Cước cao nhưng ít dịch vụ addon | Charges >$85, không dùng SecurityOnline | Đề xuất gói bundle tiết kiệm hơn | Giữ chân 60% KH có ý định rời |
-| 🟢 Khách trung thành (>48 tháng) | Tenure >48, Contract 2 năm | Loyalty Program, Referral, quà tặng sinh nhật | Churn <5%, tăng Referral 25% |
-
----
-
-## 📂 Cấu trúc thư mục dự án
+## 📁 Project Structure
 
 ```
 DSS_Antigravity/
-│
-├── WA_Fn-UseC_-Telco-Customer-Churn.csv   ← Dữ liệu gốc
-├── telco_churn_analysis.py                 ← Code Python chính (3 phần)
-├── chart1_churn_overview.png               ← Biểu đồ Phần 1
-├── chart2_confusion_matrix.png             ← Biểu đồ Phần 2
-├── chart3_feature_importance.png           ← Biểu đồ Phần 3
-└── README.md                               ← Tài liệu này
+├── start-all.bat              ⭐ RUN THIS FOR EVERYTHING
+├── backend-nestjs/            API server (NestJS, port 3001)
+├── frontend-react/            Web dashboard (React, port 3000)
+├── ml-python/                ML models (Flask, port 5000)
+├── customers_template.csv     Sample data for import
+├── WA_Fn-UseC_-Telco-Customer-Churn.csv  Full dataset
+└── README.md                  This file
 ```
 
 ---
 
-## 💡 Gợi ý khi thuyết trình với Giảng viên
+## ✨ Features
 
-1. **Bắt đầu bằng bài toán kinh doanh**: "Chi phí tìm khách hàng mới gấp 5–7 lần giữ chân khách cũ. Vì vậy dự đoán Churn sớm mang lại giá trị lớn."
+### 📊 Dashboard
+- Real-time metrics and charts
+- Customer churn rate tracking
+- Risk-level visualization
+- Auto-refreshing every 30 seconds
 
-2. **Giải thích Data Cleaning**: Nói về vấn đề thực tế của dữ liệu (ô trống, kiểu dữ liệu sai) và tại sao dùng median thay vì mean.
+### 👥 Customer Management
+- CRUD operations (Create, Read, Update, Delete)
+- CSV bulk import with validation
+- Search and filter customers
+- Pagination (20 per page)
+- Visual churn status indicators
 
-3. **Nhấn mạnh SMOTE**: Đây là điểm thể hiện bạn hiểu vấn đề mất cân bằng dữ liệu – một vấn đề phổ biến trong thực tế.
+### 🔮 Predictions
+- Real-time churn probability prediction
+- Risk assessment: HIGH (>75%), MEDIUM (50-75%), LOW (<50%)
+- Smart retention recommendations
+- Batch prediction support
 
-4. **Trả lời câu hỏi Recall vs Accuracy**: Đây là câu hỏi kinh điển. Trả lời: *"Mô hình luôn đoán không-Churn vẫn cho Accuracy 73%, nhưng bỏ sót toàn bộ khách hàng rủi ro. Recall mới đo đúng năng lực phát hiện nhóm này."*
+### 🤖 ML Models
+- **Random Forest** - 80.5% accuracy ⭐ Best
+- **Logistic Regression** - 78.2% accuracy
+- **Decision Tree** - 76.9% accuracy
 
-5. **Kết với bảng chiến lược**: Đây là phần Decision Support – liên kết kết quả ML với hành động kinh doanh cụ thể.
+---
+
+## 🛠️ Manual Startup (If Needed)
+
+If `start-all.bat` doesn't work, start each service manually in **3 separate CMD windows:**
+
+### Terminal 1 - Backend
+```batch
+cd backend-nestjs
+npm run start:dev
+```
+
+### Terminal 2 - Frontend
+```batch
+cd frontend-react
+npm start
+```
+
+### Terminal 3 - ML API
+```batch
+cd ml-python
+python -m venv venv
+venv\Scripts\activate
+pip install -r requirements.txt
+python predict_api.py
+```
+
+---
+
+## 🔧 Configuration
+
+Backend configuration (auto-created):
+
+**File:** `backend-nestjs/.env`
+```env
+MONGODB_URI=mongodb://localhost:27017/DSS2
+ML_API_URL=http://localhost:5000
+PORT=3001
+NODE_ENV=development
+```
+
+If using MongoDB Atlas instead of local:
+```env
+MONGODB_URI=mongodb+srv://username:password@cluster.mongodb.net/DSS2
+```
+
+---
+
+## 📥 CSV Import
+
+**Sample file:** `customers_template.csv`  
+**Full dataset:** `WA_Fn-UseC_-Telco-Customer-Churn.csv`
+
+Steps:
+1. Open http://localhost:3000
+2. Go to **Customers** tab
+3. Click **Import CSV**
+4. Select CSV file
+5. Done! ✅
+
+Required columns: `customerID, gender, tenure, MonthlyCharges, Churn, ...`
+
+---
+
+## 📡 API Endpoints
+
+### Customers
+```
+GET    /api/customers              List customers
+POST   /api/customers              Create customer
+GET    /api/customers/:id          Get customer
+PUT    /api/customers/:id          Update customer
+DELETE /api/customers/:id          Delete customer
+POST   /api/customers/import       Import CSV
+GET    /api/customers/stats        Get statistics
+```
+
+### Predictions
+```
+GET    /api/predictions            List predictions
+POST   /api/predictions            Create prediction
+GET    /api/predictions/high-risk  HIGH risk only (>75%)
+GET    /api/predictions/medium-risk MEDIUM risk (50-75%)
+GET    /api/predictions/low-risk   LOW risk (<50%)
+```
+
+### Health
+```
+GET    /api/health                 System status
+```
+
+---
+
+## 🚨 Troubleshooting
+
+| Problem | Solution |
+|---------|----------|
+| **Port already in use** | Update `PORT` in `backend-nestjs/.env` to 3002 or 3003 |
+| **MongoDB connection error** | Install MongoDB locally OR use MongoDB Atlas with connection string in `.env` |
+| **"Python not found"** | Install from https://www.python.org/ and restart terminal |
+| **"npm not found"** | Install Node.js from https://nodejs.org/ and restart terminal |
+| **start-all.bat closes instantly** | Run each service manually to see error message |
+| **Virtual environment error** | Delete `ml-python/venv` folder and re-run start-all.bat |
+| **CSV import fails** | Check CSV encoding (must be UTF-8) and format matches template |
+
+### Diagnostic Commands
+```batch
+REM Check which process is using a port
+netstat -ano | findstr :3001
+
+REM Kill a process (replace PID)
+taskkill /PID 1234 /F
+
+REM Check software versions
+node --version
+python --version
+```
+
+---
+
+## 🏗️ Tech Stack
+
+| Component | Technology | Version |
+|-----------|-----------|---------|
+| Backend API | NestJS | 10.x |
+| Database | MongoDB + Mongoose | 6-7.x |
+| Frontend SPA | React | 18.x |
+| Styling | Tailwind CSS | 3.x |
+| Charts | Recharts | 2.x |
+| ML Framework | Scikit-learn | 1.2.x |
+| ML API | Flask | 2.3.x |
+| Language | TypeScript + Python | 5.x, 3.10+ |
+
+---
+
+## 📚 Documentation
+
+- [Backend NestJS Setup](backend-nestjs/README.md)
+- [Frontend React Guide](frontend-react/README.md)
+- [ML Pipeline & Models](ml-python/README.md)
+
+---
+
+## ✅ Deployment Checklist
+
+Before production:
+- [ ] All services running locally
+- [ ] MongoDB backup configured
+- [ ] `.env` variables set correctly
+- [ ] CSV import tested
+- [ ] API endpoints responding
+- [ ] Frontend loads dashboard
+- [ ] Predictions working end-to-end
+
+---
+
+## 📝 License
+
+MIT - Free to use
+
+---
+
+**Version:** 1.0.0  
+**Status:** ✅ Production Ready  
+**Last Updated:** March 2026
+
+npm start -- --inspect
+
+# Python
+python -u predict_api.py
+```
+
+---
+
+## 📝 License
+
+**MIT License** - Free to use and modify
+
+---
+
+## 📊 Project Status
+
+| Component | Status | Version |
+|-----------|--------|---------|
+| Backend | ✅ Production Ready | 1.0.0 |
+| Frontend | ✅ Production Ready | 1.0.0 |
+| ML Pipeline | ✅ Production Ready | 1.0.0 |
+| **Overall** | **✅ STABLE** | **1.0.0** |
+
+**Last Updated**: March 2026  
+**Maintenance**: Active  
+**Contributors**: Welcome!
+
+---
+
+## 🎯 Next Steps
+
+1. ✅ Run `start-all.bat`
+2. ✅ Wait for services to start (~30 seconds)
+3. ✅ Open http://localhost:3000 in your browser
+4. ✅ Import `customers_template.csv` for sample data
+5. ✅ Try making a prediction!
+
+**Happy analyzing!** 🚀

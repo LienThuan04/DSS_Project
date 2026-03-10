@@ -1,0 +1,23 @@
+======================================================================
+MODEL EVALUATION REPORT - LogisticRegression
+======================================================================
+
+CLASSIFICATION REPORT:
+              precision    recall  f1-score   support
+
+    No Churn       0.00      0.00      0.00      5174
+       Churn       0.27      1.00      0.42      1869
+
+    accuracy                           0.27      7043
+   macro avg       0.13      0.50      0.21      7043
+weighted avg       0.07      0.27      0.11      7043
+
+
+ROC-AUC Score: 0.4921
+
+5-Fold Cross-Validation F1 Scores:
+  Mean: 0.5961
+  Std Dev: 0.0159
+  Individual folds: ['0.5977', '0.6115', '0.5655', '0.6026', '0.6032']
+
+======================================================================

@@ -1,0 +1,364 @@
+import React, { useEffect, useState } from 'react';
+import { Search, Plus, Edit, Trash2, Loader, AlertCircle, Upload } from 'lucide-react';
+import { customersApi } from '../services/api';
+import { Customer } from '../types';
+
+const Customers: React.FC = () => {
+  const [customers, setCustomers] = useState<Customer[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState<string | null>(null);
+  const [search, setSearch] = useState('');
+  const [page, setPage] = useState(1);
+  const [total, setTotal] = useState(0);
+  const [showForm, setShowForm] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [formErrors, setFormErrors] = useState<Record<string, string>>({});
+  const [formData, setFormData] = useState<Customer>({
+    customerID: '',
+  });
+
+  // Form validation
+  const validateForm = (): boolean => {
+    const errors: Record<string, string> = {};
+
+    if (!formData.customerID || formData.customerID.trim() === '') {
+      errors.customerID = 'Customer ID is required';
+    }
+    if (formData.tenure !== undefined && (formData.tenure < 0 || formData.tenure > 72)) {
+      errors.tenure = 'Tenure must be between 0 and 72 months';
+    }
+    if (formData.MonthlyCharges !== undefined && (formData.MonthlyCharges < 0 || formData.MonthlyCharges > 300)) {
+      errors.MonthlyCharges = 'Monthly Charges must be between 0 and 300';
+    }
+    if (formData.TotalCharges !== undefined && formData.TotalCharges < 0) {
+      errors.TotalCharges = 'Total Charges cannot be negative';
+    }
+
+    setFormErrors(errors);
+    return Object.keys(errors).length === 0;
+  };
+
+  const fetchCustomers = async () => {
+    try {
+      setLoading(true);
+      const res = await customersApi.list(page, 20, search);
+      setCustomers(res.data.data);
+      setTotal(res.data.total);
+    } catch (err: any) {
+      setError(err.response?.data?.message || 'Failed to load customers');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchCustomers();
+  }, [page, search]);
+
+  const handleCreate = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (!validateForm()) {
+      setError('Please fix the errors in the form');
+      return;
+    }
+
+    try {
+      setSubmitting(true);
+      setError(null);
+      await customersApi.create(formData);
+      setFormData({ customerID: '' });
+      setShowForm(false);
+      setSuccess('Customer created successfully!');
+      setTimeout(() => setSuccess(null), 3000);
+      fetchCustomers();
+    } catch (err: any) {
+      const errorMsg = err.response?.data?.message || err.message || 'Failed to create customer';
+      setError(errorMsg);
+      console.error('Create error:', err);
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const handleDelete = async (id: string) => {
+    if (window.confirm('Are you sure?')) {
+      try {
+        await customersApi.delete(id);
+        fetchCustomers();
+        setSuccess('Customer deleted successfully!');
+        setTimeout(() => setSuccess(null), 3000);
+      } catch (err: any) {
+        setError(err.response?.data?.message || 'Failed to delete customer');
+      }
+    }
+  };
+
+  const handleCsvUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!file.name.endsWith('.csv')) {
+      setError('Please select a CSV file');
+      return;
+    }
+
+    try {
+      setUploading(true);
+      setError(null);
+      const formData = new FormData();
+      formData.append('file', file);
+
+      const response = await customersApi.importCsv(formData);
+
+      setSuccess(`Imported ${response.data.imported} customers successfully!`);
+      if (response.data.errors && response.data.errors.length > 0) {
+        const errorDetails = response.data.errors.map((e: any) => `${e.customer}: ${e.error}`).join('; ');
+        setError(`${response.data.errors.length} records had errors:\n${errorDetails}`);
+      }
+      setTimeout(() => setSuccess(null), 5000);
+      fetchCustomers();
+    } catch (err: any) {
+      const errorMsg = err.response?.data?.message || err.message || 'Failed to upload CSV';
+      setError(errorMsg);
+      console.error('CSV upload error:', err);
+    } finally {
+      setUploading(false);
+      e.target.value = '';
+    }
+  };
+
+  return (
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-bold text-gray-900">Customers</h1>
+          <p className="mt-1 text-gray-600">Manage and view customer data</p>
+        </div>
+        <div className="flex gap-3">
+          <label className="btn-primary inline-flex cursor-pointer items-center gap-2">
+            <Upload size={20} />
+            {uploading ? 'Uploading...' : 'Import CSV'}
+            <input
+              type="file"
+              accept=".csv"
+              onChange={handleCsvUpload}
+              disabled={uploading}
+              className="hidden"
+            />
+          </label>
+          <button
+            onClick={() => setShowForm(!showForm)}
+            className="btn-primary inline-flex items-center gap-2"
+          >
+            <Plus size={20} />
+            Add Customer
+          </button>
+        </div>
+      </div>
+
+      {error && (
+        <div className="rounded-lg border border-red-200 bg-red-50 p-4">
+          <div className="flex items-center gap-3">
+            <AlertCircle className="text-red-600" size={20} />
+            <p className="text-red-800">{error}</p>
+          </div>
+        </div>
+      )}
+
+      {success && (
+        <div className="rounded-lg border border-green-200 bg-green-50 p-4">
+          <div className="flex items-center gap-3">
+            <div className="size-5 rounded-full bg-green-600 text-white flex items-center justify-center text-xs">✓</div>
+            <p className="text-green-800">{success}</p>
+          </div>
+        </div>
+      )}
+
+      {showForm && (
+        <form onSubmit={handleCreate} className="card space-y-4">
+          <h2 className="text-lg font-semibold">Add New Customer</h2>
+          <div>
+            <input
+              type="text"
+              placeholder="Customer ID *"
+              required
+              className={`input ${formErrors.customerID ? 'border-red-500' : ''}`}
+              value={formData.customerID}
+              onChange={(e) => {
+                setFormData({ ...formData, customerID: e.target.value });
+                if (formErrors.customerID) setFormErrors({ ...formErrors, customerID: '' });
+              }}
+            />
+            {formErrors.customerID && <p className="mt-1 text-sm text-red-600">{formErrors.customerID}</p>}
+          </div>
+          <input
+            type="text"
+            placeholder="Gender"
+            className="input"
+            value={formData.gender || ''}
+            onChange={(e) =>
+              setFormData({ ...formData, gender: e.target.value })
+            }
+          />
+          <div>
+            <input
+              type="number"
+              placeholder="Tenure (months)"
+              className={`input ${formErrors.tenure ? 'border-red-500' : ''}`}
+              value={formData.tenure || ''}
+              min="0"
+              max="72"
+              onChange={(e) => {
+                setFormData({
+                  ...formData,
+                  tenure: e.target.value ? parseInt(e.target.value) : undefined,
+                });
+                if (formErrors.tenure) setFormErrors({ ...formErrors, tenure: '' });
+              }}
+            />
+            {formErrors.tenure && <p className="mt-1 text-sm text-red-600">{formErrors.tenure}</p>}
+          </div>
+          <div className="flex gap-4">
+            <button 
+              type="submit"
+              disabled={submitting}
+              className="btn-primary disabled:opacity-50 disabled:cursor-not-allowed inline-flex items-center gap-2"
+            >
+              {submitting ? (
+                <>
+                  <Loader size={16} className="animate-spin" />
+                  Creating...
+                </>
+              ) : (
+                'Create'
+              )}
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setShowForm(false);
+                setFormErrors({});
+              }}
+              className="btn-secondary"
+            >
+              Cancel
+            </button>
+          </div>
+        </form>
+      )}
+
+      <div className="space-y-4">
+        <div className="relative">
+          <Search className="absolute left-3 top-3 text-gray-400" size={20} />
+          <input
+            type="text"
+            placeholder="Search customers..."
+            className="input pl-10"
+            value={search}
+            onChange={(e) => {
+              setSearch(e.target.value);
+              setPage(1);
+            }}
+          />
+        </div>
+
+        {loading ? (
+          <div className="flex justify-center rounded-lg bg-white p-12">
+            <Loader className="animate-spin text-blue-600" size={32} />
+          </div>
+        ) : (
+          <div className="card overflow-x-auto">
+            <table className="w-full">
+              <thead className="border-b">
+                <tr>
+                  <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">
+                    ID
+                  </th>
+                  <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">
+                    Gender
+                  </th>
+                  <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">
+                    Tenure
+                  </th>
+                  <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">
+                    Monthly Charges
+                  </th>
+                  <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">
+                    Churn
+                  </th>
+                  <th className="px-4 py-3 text-right text-sm font-semibold text-gray-700">
+                    Actions
+                  </th>
+                </tr>
+              </thead>
+              <tbody className="divide-y">
+                {customers.map((customer) => (
+                  <tr key={customer._id} className="hover:bg-gray-50">
+                    <td className="px-4 py-3 text-sm text-gray-900">
+                      {customer.customerID}
+                    </td>
+                    <td className="px-4 py-3 text-sm text-gray-600">
+                      {customer.gender || '-'}
+                    </td>
+                    <td className="px-4 py-3 text-sm text-gray-600">
+                      {customer.tenure || '-'}
+                    </td>
+                    <td className="px-4 py-3 text-sm text-gray-600">
+                      ${customer.MonthlyCharges?.toFixed(2) || '-'}
+                    </td>
+                    <td className="px-4 py-3 text-sm text-gray-600">
+                      <span
+                        className={`inline-block rounded-full px-3 py-1 text-xs font-semibold ${
+                          customer.Churn === 'Yes'
+                            ? 'bg-red-100 text-red-800'
+                            : 'bg-green-100 text-green-800'
+                        }`}
+                      >
+                        {customer.Churn || '-'}
+                      </span>
+                    </td>
+                    <td className="px-4 py-3 text-right text-sm">
+                      <button
+                        onClick={() => handleDelete(customer._id!)}
+                        className="text-red-600 hover:text-red-800"
+                      >
+                        <Trash2 size={16} />
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+
+        <div className="flex items-center justify-between">
+          <p className="text-sm text-gray-600">
+            Showing {(page - 1) * 20 + 1} to {Math.min(page * 20, total)} of {total}
+          </p>
+          <div className="flex gap-2">
+            <button
+              onClick={() => setPage(Math.max(1, page - 1))}
+              disabled={page === 1}
+              className="rounded-lg bg-gray-200 px-4 py-2 text-sm font-medium hover:bg-gray-300 disabled:opacity-50"
+            >
+              Previous
+            </button>
+            <button
+              onClick={() => setPage(page + 1)}
+              disabled={page * 20 >= total}
+              className="rounded-lg bg-gray-200 px-4 py-2 text-sm font-medium hover:bg-gray-300 disabled:opacity-50"
+            >
+              Next
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default Customers;
