@@ -25,6 +25,7 @@ export const customersApi = {
   update: (id: string, data: any) => apiClient.put(`/customers/${id}`, data),
   delete: (id: string) => apiClient.delete(`/customers/${id}`),
   stats: () => apiClient.get('/customers/stats'),
+  segmentedStats: () => apiClient.get('/customers/stats/segments'),
   import: (customers: any[]) => apiClient.post('/customers/import', customers),
   importCsv: (formData: FormData) => fileUploadClient.post('/customers/import', formData),
 };
@@ -38,6 +39,10 @@ export const predictionsApi = {
     apiClient.post('/predictions', data, { params: { customerId } }),
   predictByCustomerId: (customerId: string) =>
     apiClient.post(`/predictions/customer/${customerId}`),
+  predictRaw: (data: any) =>
+    apiClient.post('/predictions', data),
+  whatIf: (request: any) =>
+    apiClient.post('/predictions/what-if', request),
   highRisk: (limit: number = 100) =>
     apiClient.get('/predictions/high-risk', { params: { limit } }),
   mediumRisk: (limit: number = 100) =>
@@ -45,6 +50,8 @@ export const predictionsApi = {
   stats: () => apiClient.get('/predictions/stats'),
   delete: (id: string) => apiClient.delete(`/predictions/${id}`),
   health: () => apiClient.get('/predictions/health'),
+  getCustomers: (limit: number = 200) =>
+    apiClient.get('/customers', { params: { page: 1, limit } }),
 };
 
 // Health Check

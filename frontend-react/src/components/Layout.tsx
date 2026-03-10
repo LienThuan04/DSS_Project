@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Menu, X, BarChart3, Users, TrendingUp } from 'lucide-react';
+import { Menu, X, BarChart3, Users, TrendingUp, Zap } from 'lucide-react';
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -18,6 +18,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
     { label: 'Dashboard', icon: BarChart3, path: '/' },
     { label: 'Customers', icon: Users, path: '/customers' },
     { label: 'Predictions', icon: TrendingUp, path: '/predictions' },
+    { label: 'What-If Analysis', icon: Zap, path: '/predictions/what-if' },
   ];
 
   return (

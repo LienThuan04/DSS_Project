@@ -45,14 +45,36 @@ if not exist "%scriptDir%backend-nestjs\.env" (
 )
 
 echo.
+echo Installing dependencies...
+echo.
+
+REM Install Backend dependencies
+echo [Setup] Installing Backend dependencies...
+cd /d "%scriptDir%backend-nestjs"
+if exist "pnpm-lock.yaml" (
+    call pnpm install --no-strict-peer-dependencies
+) else (
+    call npm install
+)
+cd /d "%scriptDir%"
+
+REM Install Frontend dependencies
+echo [Setup] Installing Frontend dependencies...
+cd /d "%scriptDir%frontend-react"
+if exist "pnpm-lock.yaml" (
+    call pnpm install --no-strict-peer-dependencies
+) else (
+    call npm install
+)
+cd /d "%scriptDir%"
+
+echo.
 echo Starting all services...
 echo.
 
 REM Start Backend
 echo [1/3] Backend (NestJS) on port 3001...
 start "DSS Backend" cmd /k "cd /d %scriptDir%backend-nestjs && set PORT=3001 && npm run start:dev"
-
-timeout /t 3 /nobreak
 
 REM Start Frontend
 echo [2/3] Frontend (React) on port 3000...
@@ -66,7 +88,32 @@ cd /d "%scriptDir%ml-python"
 if not exist "venv" (
     echo [Setup] Creating Python virtual environment...
     python -m venv venv
+    echo [Setup] Installing Python dependencies...
+    call venv\Scripts\activate.bat
+    pip install -r requirements.txt
+    deactivate
 )
+
+REM Retrain ML Model with latest data
+echo [Setup] Retraining ML model with latest data...
+call venv\Scripts\activate.bat
+echo [ML] Running data preprocessing...
+python data_preprocessing.py
+if errorlevel 1 (
+    echo [ERROR] Data preprocessing failed!
+    pause
+) else (
+    echo [OK] Data preprocessing completed
+)
+echo [ML] Training model...
+python train_model.py
+if errorlevel 1 (
+    echo [ERROR] Model training failed!
+    pause
+) else (
+    echo [OK] Model training completed
+)
+call venv\Scripts\deactivate.bat
 
 start "DSS ML API" cmd /k "cd /d %scriptDir%ml-python && venv\Scripts\activate.bat && python predict_api.py"
 

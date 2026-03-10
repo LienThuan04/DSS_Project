@@ -1,0 +1,158 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Customer Churn Prediction Input Schema",
+  "description": "Schema for customer data used in churn prediction model",
+  "type": "object",
+  "required": [
+    "gender",
+    "SeniorCitizen",
+    "Partner",
+    "Dependents",
+    "tenure",
+    "PhoneService",
+    "MultipleLines",
+    "InternetService",
+    "OnlineSecurity",
+    "OnlineBackup",
+    "DeviceProtection",
+    "TechSupport",
+    "StreamingTV",
+    "StreamingMovies",
+    "Contract",
+    "PaperlessBilling",
+    "PaymentMethod",
+    "MonthlyCharges",
+    "TotalCharges"
+  ],
+  "properties": {
+    "customerID": {
+      "type": "string",
+      "description": "Customer identifier (optional for new customers)"
+    },
+    "gender": {
+      "type": "string",
+      "enum": ["Male", "Female"],
+      "description": "Customer gender"
+    },
+    "SeniorCitizen": {
+      "type": "integer",
+      "enum": [0, 1],
+      "description": "Is customer a senior citizen? (0=No, 1=Yes)"
+    },
+    "Partner": {
+      "type": "string",
+      "enum": ["Yes", "No"],
+      "description": "Does customer have a partner?"
+    },
+    "Dependents": {
+      "type": "string",
+      "enum": ["Yes", "No"],
+      "description": "Does customer have dependents?"
+    },
+    "tenure": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 72,
+      "description": "Number of months customer has been with company"
+    },
+    "PhoneService": {
+      "type": "string",
+      "enum": ["Yes", "No"],
+      "description": "Does customer have phone service?"
+    },
+    "MultipleLines": {
+      "type": "string",
+      "enum": ["Yes", "No", "No phone service"],
+      "description": "Does customer have multiple lines?"
+    },
+    "InternetService": {
+      "type": "string",
+      "enum": ["DSL", "Fiber optic", "No"],
+      "description": "Customer's internet service type"
+    },
+    "OnlineSecurity": {
+      "type": "string",
+      "enum": ["Yes", "No", "No internet service"],
+      "description": "Does customer have online security service?"
+    },
+    "OnlineBackup": {
+      "type": "string",
+      "enum": ["Yes", "No", "No internet service"],
+      "description": "Does customer have online backup service?"
+    },
+    "DeviceProtection": {
+      "type": "string",
+      "enum": ["Yes", "No", "No internet service"],
+      "description": "Does customer have device protection service?"
+    },
+    "TechSupport": {
+      "type": "string",
+      "enum": ["Yes", "No", "No internet service"],
+      "description": "Does customer have tech support service?"
+    },
+    "StreamingTV": {
+      "type": "string",
+      "enum": ["Yes", "No", "No internet service"],
+      "description": "Does customer use streaming TV service?"
+    },
+    "StreamingMovies": {
+      "type": "string",
+      "enum": ["Yes", "No", "No internet service"],
+      "description": "Does customer use streaming movies service?"
+    },
+    "Contract": {
+      "type": "string",
+      "enum": ["Month-to-month", "One year", "Two year"],
+      "description": "Customer's contract type"
+    },
+    "PaperlessBilling": {
+      "type": "string",
+      "enum": ["Yes", "No"],
+      "description": "Does customer use paperless billing?"
+    },
+    "PaymentMethod": {
+      "type": "string",
+      "enum": [
+        "Electronic check",
+        "Mailed check",
+        "Bank transfer (automatic)",
+        "Credit card (automatic)"
+      ],
+      "description": "Customer's payment method"
+    },
+    "MonthlyCharges": {
+      "type": "number",
+      "minimum": 0,
+      "description": "Monthly charges in dollars"
+    },
+    "TotalCharges": {
+      "type": "number",
+      "minimum": 0,
+      "description": "Total charges since customer started, in dollars"
+    }
+  },
+  "additionalProperties": false,
+  "examples": [
+    {
+      "gender": "Male",
+      "SeniorCitizen": 0,
+      "Partner": "No",
+      "Dependents": "No",
+      "tenure": 1,
+      "PhoneService": "No",
+      "MultipleLines": "No phone service",
+      "InternetService": "Fiber optic",
+      "OnlineSecurity": "No",
+      "OnlineBackup": "No",
+      "DeviceProtection": "No",
+      "TechSupport": "No",
+      "StreamingTV": "No",
+      "StreamingMovies": "No",
+      "Contract": "Month-to-month",
+      "PaperlessBilling": "Yes",
+      "PaymentMethod": "Electronic check",
+      "MonthlyCharges": 65.1,
+      "TotalCharges": 65.1
+    }
+  ]
+}

@@ -4,6 +4,7 @@ import { PredictionsService } from './predictions.service';
 import { PredictionsController } from './predictions.controller';
 import { Prediction, PredictionSchema } from './schemas/prediction.schema';
 import { MlService } from '../common/services/ml.service';
+import { RecommendationService } from '../common/services/recommendation.service';
 import { CustomersModule } from '../customers/customers.module';
 
 @Module({
@@ -14,6 +15,6 @@ import { CustomersModule } from '../customers/customers.module';
     CustomersModule,
   ],
   controllers: [PredictionsController],
-  providers: [PredictionsService, MlService],
+  providers: [PredictionsService, MlService, RecommendationService],
 })
 export class PredictionsModule {}

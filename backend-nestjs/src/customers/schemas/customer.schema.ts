@@ -68,3 +68,12 @@ export class Customer extends Document {
 }
 
 export const CustomerSchema = SchemaFactory.createForClass(Customer);
+
+// Create indexes for common queries and performance
+CustomerSchema.index({ customerID: 1 }, { unique: true });
+CustomerSchema.index({ tenure: 1 });
+CustomerSchema.index({ MonthlyCharges: 1 });
+CustomerSchema.index({ Contract: 1 });
+CustomerSchema.index({ InternetService: 1 });
+CustomerSchema.index({ PaymentMethod: 1 });
+CustomerSchema.index({ Churn: 1 });

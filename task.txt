@@ -1,746 +1,182 @@
-# Customer Churn Decision Support System (DSS)
+# DSS Project (Customer Churn DSS) — Development Tasks (Branch: BaoCao)
 
-**Full Task Specification (A → Z)**
-Tech Stack: **Python (ML) + ReactJS + NestJS + MongoDB**
+Goal: Upgrade the current system into a **real Decision Support System (DSS)** for **Telecom Customer Churn Prediction** using dataset `WA_Fn-UseC_-Telco-Customer-Churn.csv`.
 
----
-
-# 1. Project Overview
-
-## 1.1 Project Title
-
-**Decision Support System for Customer Churn Prediction**
-
-## 1.2 Objective
-
-Develop a **web-based Decision Support System (DSS)** that analyzes telecom customer data and predicts whether a customer is likely to leave the service (churn).
-
-The system helps managers:
-
-* Analyze customer behavior
-* Predict churn probability
-* Identify high-risk customers
-* Make retention decisions
+Tech stack in branch `BaoCao`:
+- Frontend: React + TypeScript (`frontend-react`)
+- Backend: NestJS + TypeScript + MongoDB (`backend-nestjs`)
+- ML Service: Python + scikit-learn + Flask (`ml-python`)
 
 ---
 
-# 2. Dataset Information
-
-Dataset provided by instructor:
-
-```
-WA_Fn-UseC_-Telco-Customer-Churn.csv
-```
-
-Notebook provided:
-
-```
-telco_customer_churn.ipynb
-```
-
-### Dataset Description
-
-The dataset contains telecom customer information and whether they churned.
-
-Target variable:
-
-```
-Churn (Yes / No)
-```
-
-Example fields:
-
-| Column          | Description                          |
-| --------------- | ------------------------------------ |
-| customerID      | Customer unique ID                   |
-| gender          | Male / Female                        |
-| SeniorCitizen   | 0 or 1                               |
-| Partner         | Yes / No                             |
-| Dependents      | Yes / No                             |
-| tenure          | Months with company                  |
-| PhoneService    | Yes / No                             |
-| InternetService | DSL / Fiber / No                     |
-| Contract        | Month-to-month / One year / Two year |
-| PaymentMethod   | Payment method                       |
-| MonthlyCharges  | Monthly fee                          |
-| TotalCharges    | Total spending                       |
-| Churn           | Target label                         |
+## 0) Setup / Repo Hygiene (Quick Wins)
+- [ ] **SETUP-01** Ensure `.env.example` exists for backend and frontend (document required env vars).
+- [ ] **SETUP-02** Add a root-level `docs/` folder for report assets (screenshots, diagrams, report markdown).
+- [ ] **SETUP-03** Add a root-level `TASKS.md` (this file) and keep it updated.
+- [ ] **SETUP-04** Clean up root README duplication (choose one: `README.md` as main, remove/archieve `README_NEW.md`).
 
 ---
 
-# 3. System Architecture
+## 1) Decision Support (DSS) Features (Highest Priority)
+### Recommendations (Business Rules)
+- [ ] **DSS-01** Implement a **Recommendation Rules Engine** in backend:
+  - Input: `churn_probability` + selected customer features (Contract, tenure, InternetService, MonthlyCharges, PaymentMethod, etc.)
+  - Output: `recommendation`, `priority` (`LOW|NORMAL|HIGH|URGENT`)
+  - Must be deterministic and documented (rule table in docs).
+- [ ] **DSS-02** Add API response fields for DSS output:
+  - `recommendation`, `priority`, `risk_level`, `churn_probability`
+  - (Optional) `reason_codes: string[]`
 
-```
-ReactJS (Frontend Dashboard)
-        |
-        |
-     NestJS API
-        |
-        |
-      MongoDB
-        |
-        |
-   Python ML Service
- (Pandas + Scikit-learn)
-```
+### What-if / Scenario Simulation
+- [ ] **DSS-03** Create **What-if Simulation API**:
+  - Endpoint: `POST /api/predictions/what-if`
+  - Body: `{ customerId?: string, baseCustomer?: object, changes: object }`
+  - Response: `{ base: PredictionResult, scenario: PredictionResult, delta: { probabilityDelta } }`
+- [ ] **DSS-04** Build frontend **What-if UI**:
+  - Pick a customer (or use last predicted)
+  - Change 1–3 fields (Contract, MonthlyCharges, InternetService, tenure)
+  - Show before/after probability + risk + recommendation
 
-### Components
-
-Frontend
-
-* Dashboard
-* Customer Management
-* Prediction Interface
-
-Backend
-
-* API services
-* Data processing
-* ML service integration
-
-Machine Learning
-
-* Data preprocessing
-* Model training
-* Prediction API
-
-Database
-
-* Store customers
-* Store predictions
+### Explainability (Why this prediction?)
+- [ ] **DSS-05** Add explainability output:
+  - Option A (fast): global feature importance from RandomForest
+  - Option B (best): SHAP values per prediction
+  - Return `top_factors: [{ feature, value, impact }]` (top 5)
+- [ ] **DSS-06** Frontend explainability panel:
+  - Show top factors as bar chart
+  - Short text: “Most influential factors: …”
 
 ---
 
-# 4. Project Folder Structure
+## 2) ML Service Improvements (`ml-python`)
+### Reproducible Training + Reporting
+- [ ] **ML-01** Add a single command to regenerate everything:
+  - `python run_pipeline.py` should produce:
+    - `clean_dataset.csv`
+    - `model.pkl`, `scaler.pkl` (+ encoder artifacts if needed)
+    - `evaluation_results/` (plots + metrics)
+    - `evaluation_results/report.json` (machine-readable metrics)
+- [ ] **ML-02** Implement model comparison table export:
+  - Logistic Regression vs Decision Tree vs Random Forest
+  - Metrics: Accuracy, Precision, Recall, F1, AUC
+  - Save as `evaluation_results/model_comparison.csv` (or `.json`)
+- [ ] **ML-03** Add cross-validation (5-fold) for at least the best model:
+  - Save CV results into `evaluation_results/cv_results.json`
+- [ ] **ML-04** Check class imbalance and handle if needed:
+  - Use `class_weight="balanced"` or SMOTE
+  - Document the choice in `docs/report.md`
+- [ ] **ML-05** Define and export an **input schema**:
+  - Create `ml-python/input_schema.json`
+  - Contains required fields + data types + allowed categories if applicable
+- [ ] **ML-06** Improve `predict_api.py`:
+  - Validate input (missing fields, wrong type)
+  - Return consistent JSON:
+    ```json
+    {
+      "success": true,
+      "churn_probability": 0.82,
+      "risk_level": "HIGH",
+      "recommendation": "...",
+      "priority": "URGENT",
+      "top_factors": []
+    }
+    ```
 
-```
-customer-churn-dss
-│
-├── dataset
-│     WA_Fn-UseC_-Telco-Customer-Churn.csv
-│
-├── ml-python
-│     data_preprocessing.py
-│     train_model.py
-│     evaluate_model.py
-│     predict_api.py
-│     model.pkl
-│
-├── backend-nestjs
-│
-├── frontend-react
-│
-├── docs
-│
-└── README.md
-```
-
----
-
-# 5. Machine Learning Development Tasks
-
-Responsible: **Python ML Engineer**
-
----
-
-# 5.1 Environment Setup
-
-Install required libraries.
-
-```
-pip install pandas
-pip install numpy
-pip install scikit-learn
-pip install matplotlib
-pip install seaborn
-pip install flask
-pip install joblib
-```
+### Explainability (ML side)
+- [ ] **ML-07** Implement SHAP (optional but recommended):
+  - Add `shap` dependency
+  - Compute top 5 features for a single prediction
+  - Return them to backend
 
 ---
 
-# 5.2 Data Loading
+## 3) Backend (NestJS) Tasks (`backend-nestjs`)
+### Data Model & Storage
+- [ ] **BE-01** Finalize MongoDB schemas:
+  - `Customer` (fields matching dataset)
+  - `Prediction` (customerId/ref, probability, risk, recommendation, createdAt, inputSnapshot)
+- [ ] **BE-02** Store prediction history:
+  - Every prediction call should insert into `predictions` collection
+  - Link to customer if prediction is from existing customer
 
-Load dataset.
+### Prediction Flow (End-to-End)
+- [ ] **BE-03** Add endpoint to predict for an existing customer:
+  - `POST /api/predictions/customer/:customerId`
+  - Steps:
+    1. Load customer from DB
+    2. Map DB customer → ML input payload
+    3. Call ML API `/predict`
+    4. Apply recommendation rules
+    5. Save prediction record
+    6. Return result
+- [ ] **BE-04** Add endpoint to predict from raw input (no DB):
+  - `POST /api/predictions`
+  - Validate payload, call ML, apply rules, save (optional)
+- [ ] **BE-05** Add `GET /api/predictions/stats`:
+  - Count by risk level
+  - Last 7 days predictions (if timestamps exist)
+- [ ] **BE-06** Add better error handling:
+  - If ML API is down → return 503 + readable error
+  - Log the request/response errors
 
-Tasks:
-
-* Read CSV file
-* Inspect dataset
-* Check missing values
-
-Example:
-
-```
-Load dataset
-Display first rows
-Check column types
-Check null values
-```
-
-Outputs:
-
-```
-Dataset summary
-Column statistics
-```
-
----
-
-# 5.3 Data Cleaning
-
-Tasks:
-
-1. Remove unnecessary columns
-2. Convert TotalCharges to numeric
-3. Handle missing values
-4. Convert Yes/No to binary
-5. Encode categorical features
-
-Example conversions:
-
-```
-Yes → 1
-No → 0
-```
-
-Categorical encoding:
-
-```
-Contract
-InternetService
-PaymentMethod
-```
-
-Expected Output:
-
-```
-clean_dataset.csv
-```
+### CSV Import
+- [ ] **BE-07** Improve CSV import validation:
+  - Reject missing required columns
+  - Show how many rows imported / failed
+  - Return details for failed rows
 
 ---
 
-# 5.4 Exploratory Data Analysis (EDA)
+## 4) Frontend (React) Tasks (`frontend-react`)
+### Prediction UX
+- [ ] **FE-01** Add “Predict” action in Customers list:
+  - Button in each row or in customer detail modal
+  - Calls `POST /api/predictions/customer/:customerId`
+  - Shows result modal (probability + risk + recommendation)
+- [ ] **FE-02** Add “New Prediction” form page:
+  - Manual input fields (minimum set)
+  - Submit → show result + explainability panel
 
-Analyze churn patterns.
+### Dashboard Enhancements
+- [ ] **FE-03** Dashboard: show risk distribution (HIGH/MEDIUM/LOW)
+- [ ] **FE-04** Dashboard: show churn distribution and key segment charts:
+  - churn by Contract
+  - churn by InternetService
+  - churn by PaymentMethod
 
-Required analyses:
-
-1. Churn distribution
-2. Churn by gender
-3. Churn by contract
-4. Churn by internet service
-5. Churn by tenure
-6. Churn by monthly charges
-
-Required charts:
-
-```
-Pie Chart – Churn vs Non-Churn
-Bar Chart – Churn by Contract
-Bar Chart – Churn by InternetService
-Histogram – Tenure distribution
-Box Plot – MonthlyCharges vs Churn
-```
-
-Outputs:
-
-```
-EDA charts
-EDA report
-```
+### What-if
+- [ ] **FE-05** Add What-if simulation UI:
+  - Choose customer
+  - Change fields
+  - Display delta results (before/after)
 
 ---
 
-# 5.5 Feature Engineering
-
-Prepare features for machine learning.
-
-Tasks:
-
-1. Select features
-2. Normalize numeric data
-3. Encode categorical variables
-4. Create training dataset
-
-Example features:
-
-```
-tenure
-MonthlyCharges
-TotalCharges
-Contract
-InternetService
-PaymentMethod
-SeniorCitizen
-```
-
-Output:
-
-```
-X (features)
-y (target)
-```
+## 5) Documentation / Report (For Lecturer)
+- [ ] **DOC-01** Create `docs/report.md` with:
+  - Problem statement (why churn matters)
+  - Dataset description (target, key columns)
+  - EDA summary + charts
+  - ML approach + model comparison + evaluation
+  - DSS features (recommendation + what-if + explainability)
+  - System architecture diagram + data flow
+  - Screenshots of UI demo
+  - Conclusion + future work
+- [ ] **DOC-02** Create `docs/demo-checklist.md`:
+  - Start all services
+  - Import CSV
+  - Predict for a customer
+  - Show high-risk list
+  - Run what-if simulation
+  - Show explainability
+- [ ] **DOC-03** Add screenshots folder:
+  - `docs/screenshots/` with labeled images for report
 
 ---
 
-# 5.6 Train Machine Learning Models
-
-Train multiple algorithms.
-
-Required models:
-
-```
-Logistic Regression
-Random Forest
-Decision Tree
-```
-
-Tasks:
-
-1. Split data into training/testing
-2. Train models
-3. Evaluate models
-4. Compare performance
-
-Metrics:
-
-```
-Accuracy
-Precision
-Recall
-F1 Score
-Confusion Matrix
-```
-
-Output:
-
-```
-Best trained model
-```
-
----
-
-# 5.7 Model Evaluation
-
-Evaluate performance.
-
-Tasks:
-
-```
-Cross validation
-Confusion matrix visualization
-Feature importance analysis
-```
-
-Output:
-
-```
-Model evaluation report
-```
-
----
-
-# 5.8 Save Model
-
-Save trained model.
-
-```
-model.pkl
-```
-
-Use:
-
-```
-joblib
-pickle
-```
-
----
-
-# 5.9 Prediction API (Python)
-
-Create ML prediction API.
-
-Framework:
-
-```
-Flask
-or
-FastAPI
-```
-
-Endpoint:
-
-```
-POST /predict
-```
-
-Input example:
-
-```
-{
- "tenure": 12,
- "contract": "Month-to-month",
- "internetService": "Fiber optic",
- "monthlyCharges": 75
-}
-```
-
-Output example:
-
-```
-{
- "churn_probability": 0.83,
- "risk_level": "HIGH"
-}
-```
-
-Tasks:
-
-1. Load trained model
-2. Process input data
-3. Predict churn probability
-4. Return result JSON
-
----
-
-# 6. Backend Development (NestJS)
-
-Responsible: **Backend Engineer**
-
----
-
-# 6.1 Backend Setup
-
-Tasks:
-
-```
-Create NestJS project
-Configure environment variables
-Setup MongoDB connection
-```
-
-Install dependencies:
-
-```
-@nestjs/mongoose
-mongoose
-axios
-class-validator
-```
-
----
-
-# 6.2 MongoDB Database Design
-
-Collections:
-
-### Customers
-
-Fields:
-
-```
-customerID
-gender
-SeniorCitizen
-Partner
-Dependents
-tenure
-PhoneService
-InternetService
-Contract
-PaymentMethod
-MonthlyCharges
-TotalCharges
-Churn
-```
-
----
-
-### Predictions
-
-Fields:
-
-```
-customerId
-predictionProbability
-riskLevel
-recommendation
-createdAt
-```
-
----
-
-# 6.3 Customer Module
-
-Create module.
-
-Files:
-
-```
-customer.module.ts
-customer.controller.ts
-customer.service.ts
-customer.schema.ts
-```
-
-Features:
-
-```
-Create customer
-Update customer
-Delete customer
-List customers
-Import CSV
-```
-
-API Endpoints:
-
-```
-GET /customers
-POST /customers
-PUT /customers/:id
-DELETE /customers/:id
-```
-
----
-
-# 6.4 Prediction Module
-
-Files:
-
-```
-prediction.module.ts
-prediction.controller.ts
-prediction.service.ts
-```
-
-Endpoint:
-
-```
-POST /predict
-```
-
-Process:
-
-```
-Receive customer data
-Send request to Python API
-Receive prediction
-Save prediction
-Return response
-```
-
----
-
-# 6.5 Decision Recommendation Logic
-
-Add business rules.
-
-Example:
-
-```
-If probability > 0.75
-    recommendation = "Offer 10% discount"
-
-If probability > 0.50
-    recommendation = "Offer better contract"
-
-Else
-    recommendation = "No action required"
-```
-
----
-
-# 7. Frontend Development (ReactJS)
-
-Responsible: **Frontend Engineer**
-
----
-
-# 7.1 React Setup
-
-Tasks:
-
-```
-Create React project
-Setup routing
-Install UI libraries
-```
-
-Libraries:
-
-```
-axios
-react-router
-chart.js
-recharts
-material-ui or antd
-```
-
----
-
-# 7.2 Dashboard Page
-
-Display analytics.
-
-Metrics:
-
-```
-Total customers
-Total churn rate
-High risk customers
-```
-
-Charts:
-
-```
-Churn distribution
-Churn by contract
-Churn by internet service
-Churn by payment method
-```
-
----
-
-# 7.3 Customer Management Page
-
-Features:
-
-```
-List customers
-Add customer
-Edit customer
-Delete customer
-Search customers
-Pagination
-```
-
----
-
-# 7.4 Prediction Page
-
-Form fields:
-
-```
-tenure
-contract
-internet service
-monthly charges
-payment method
-```
-
-Result display:
-
-```
-Churn probability
-Risk level
-Recommendation
-```
-
----
-
-# 8. Decision Support Features
-
-System must provide decision recommendations.
-
-Example output:
-
-| Risk   | Recommendation  |
-| ------ | --------------- |
-| HIGH   | Offer discount  |
-| MEDIUM | Upgrade package |
-| LOW    | No action       |
-
----
-
-# 9. Testing
-
-Backend tests:
-
-```
-Customer CRUD
-Prediction endpoint
-Python API connection
-```
-
-Frontend tests:
-
-```
-Form submission
-Chart rendering
-API responses
-```
-
-Tools:
-
-```
-Postman
-Jest
-React testing library
-```
-
----
-
-# 10. Deployment (Optional)
-
-Backend deployment:
-
-```
-Render
-Railway
-AWS
-```
-
-Frontend deployment:
-
-```
-Vercel
-Netlify
-```
-
-ML API deployment:
-
-```
-Render
-Heroku
-```
-
----
-
-# 11. Documentation
-
-Prepare report sections:
-
-```
-Introduction
-Problem description
-Dataset description
-Machine learning approach
-System architecture
-Implementation
-Results
-Conclusion
-```
-
----
-
-# 12. Final Deliverables
-
-Project submission should include:
-
-```
-Source code
-Machine learning model
-Dataset preprocessing scripts
-Running web application
-Project report
-Presentation slides
-```
-
----
-
-# End of Task Specification
-
-This document describes **all required tasks from start to finish** for building the Customer Churn Decision Support System.
+## Suggested Implementation Order (Fastest to “Demo Ready”)
+1. **BE-03 + FE-01** (predict from existing customer)
+2. **DSS-01** (recommendation rules engine)
+3. **ML-02** (model comparison + evaluation report export)
+4. **DSS-03 + FE-05** (what-if simulation)
+5. **DSS-05** (explainability: feature importance or SHAP)

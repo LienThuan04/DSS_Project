@@ -14,8 +14,72 @@ export class CreatePredictionDto {
 
 export class MakePredictionDto {
   @IsOptional()
+  @IsString()
+  gender?: string;
+
+  @IsOptional()
+  @IsNumber()
+  SeniorCitizen?: number;
+
+  @IsOptional()
+  @IsString()
+  Partner?: string;
+
+  @IsOptional()
+  @IsString()
+  Dependents?: string;
+
+  @IsOptional()
   @IsNumber()
   tenure?: number;
+
+  @IsOptional()
+  @IsString()
+  PhoneService?: string;
+
+  @IsOptional()
+  @IsString()
+  MultipleLines?: string;
+
+  @IsOptional()
+  @IsString()
+  InternetService?: string;
+
+  @IsOptional()
+  @IsString()
+  OnlineSecurity?: string;
+
+  @IsOptional()
+  @IsString()
+  OnlineBackup?: string;
+
+  @IsOptional()
+  @IsString()
+  DeviceProtection?: string;
+
+  @IsOptional()
+  @IsString()
+  TechSupport?: string;
+
+  @IsOptional()
+  @IsString()
+  StreamingTV?: string;
+
+  @IsOptional()
+  @IsString()
+  StreamingMovies?: string;
+
+  @IsOptional()
+  @IsString()
+  Contract?: string;
+
+  @IsOptional()
+  @IsString()
+  PaperlessBilling?: string;
+
+  @IsOptional()
+  @IsString()
+  PaymentMethod?: string;
 
   @IsOptional()
   @IsNumber()
@@ -24,22 +88,6 @@ export class MakePredictionDto {
   @IsOptional()
   @IsNumber()
   TotalCharges?: number;
-
-  @IsOptional()
-  @IsNumber()
-  SeniorCitizen?: number;
-
-  @IsOptional()
-  @IsNumber()
-  Contract?: number;
-
-  @IsOptional()
-  @IsNumber()
-  InternetService?: number;
-
-  @IsOptional()
-  @IsNumber()
-  PaymentMethod?: number;
 
   [key: string]: any;
 }

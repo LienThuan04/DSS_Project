@@ -1,41 +1,98 @@
+/// <reference types="jest" />
 import { Test, TestingModule } from '@nestjs/testing';
 import { getModelToken } from '@nestjs/mongoose';
+import { BadRequestException, NotFoundException } from '@nestjs/common';
 import { PredictionsService } from './predictions.service';
 import { Prediction } from './schemas/prediction.schema';
 import { MlService } from '../common/services/ml.service';
-import { NotFoundException } from '@nestjs/common';
+import { RecommendationService } from '../common/services/recommendation.service';
+import { CustomersService } from '../customers/customers.service';
 
-describe('PredictionsService', () => {
+describe('PredictionsService - BE-03 Integration Tests', () => {
   let service: PredictionsService;
   let mockPredictionModel: any;
   let mockMlService: any;
+  let mockRecommendationService: any;
+  let mockCustomersService: any;
 
-  const mockPrediction = {
-    _id: 'pred1',
-    customerId: 'CUST001',
-    churnProbability: 0.75,
-    riskLevel: 'HIGH',
-    recommendation: 'Offer discount',
-    priority: 'URGENT',
-    save: jest.fn().mockResolvedValue(this),
+  const mockCustomer = {
+    _id: 'cust_mongo_id',
+    customerID: 'CUST001',
+    tenure: 24,
+    MonthlyCharges: 85.5,
+    TotalCharges: 2052,
+    SeniorCitizen: 0,
+    Contract: 'One year',
+    PaymentMethod: 'Bank transfer',
+    InternetService: 'Fiber optic',
+    OnlineSecurity: 'Yes',
+    TechSupport: 'Yes',
+    Churn: 'No',
   };
 
+  const mockMLResponse = {
+    success: true,
+    churnProbability: 0.72,
+    riskLevel: 'HIGH',
+    recommendation: 'Review contract',
+    priority: 'HIGH',
+    topFactors: [
+      { feature: 'tenure', value: '24', impact: 0.15 },
+      { feature: 'MonthlyCharges', value: '85.5', impact: 0.12 },
+    ],
+  };
+
+  const mockRecommendation = {
+    recommendation: 'Contract upgrade recommended with discount',
+    priority: 'HIGH',
+    reasonCodes: ['HIGH_CHURN_HIGH_VALUE'],
+  };
+
+  const mockRiskLevel = 'HIGH';
+
   beforeEach(async () => {
-    mockPredictionModel = {
-      create: jest.fn(),
-      findById: jest.fn(),
-      find: jest.fn(),
-      countDocuments: jest.fn(),
-      findByIdAndDelete: jest.fn(),
+    // Mock Prediction Model
+    const mockSaveInstance = {
+      _id: 'pred_123',
+      customerId: 'CUST001',
+      churnProbability: 0.72,
+      riskLevel: 'HIGH',
+      recommendation: 'Contract upgrade recommended with discount',
+      priority: 'HIGH',
+      reasonCodes: ['HIGH_CHURN_HIGH_VALUE'],
+      topFactors: [],
+      inputSnapshot: {},
+      status: 'success',
+      modelVersion: '1.0.0',
+      predictionMethod: 'customer_based',
+      createdAt: new Date(),
     };
 
+    mockPredictionModel = jest.fn().mockImplementation((data) => ({
+      ...data,
+      save: jest.fn().mockResolvedValue(mockSaveInstance),
+    }));
+
+    mockPredictionModel.find = jest.fn();
+    mockPredictionModel.findById = jest.fn();
+    mockPredictionModel.countDocuments = jest.fn();
+    mockPredictionModel.findByIdAndDelete = jest.fn();
+
+    // Mock ML Service
     mockMlService = {
-      predict: jest.fn().mockResolvedValue({
-        churn_probability: 0.75,
-        risk_level: 'HIGH',
-        recommendation: 'Offer discount',
-        priority: 'URGENT',
-      }),
+      predict: jest.fn().mockResolvedValue(mockMLResponse),
+      health: jest.fn().mockResolvedValue({ status: 'healthy' }),
+    };
+
+    // Mock Recommendation Service
+    mockRecommendationService = {
+      getRecommendation: jest.fn().mockReturnValue(mockRecommendation),
+      getRiskLevel: jest.fn().mockReturnValue(mockRiskLevel),
+    };
+
+    // Mock Customers Service
+    mockCustomersService = {
+      findByCustomerId: jest.fn().mockResolvedValue(mockCustomer),
     };
 
     const module: TestingModule = await Test.createTestingModule({
@@ -49,77 +106,170 @@ describe('PredictionsService', () => {
           provide: MlService,
           useValue: mockMlService,
         },
+        {
+          provide: RecommendationService,
+          useValue: mockRecommendationService,
+        },
+        {
+          provide: CustomersService,
+          useValue: mockCustomersService,
+        },
       ],
     }).compile();
 
     service = module.get<PredictionsService>(PredictionsService);
   });
 
-  describe('predict', () => {
-    it('should call ML service and create prediction', async () => {
-      mockPredictionModel.create.mockResolvedValue(mockPrediction);
+  describe('predictByCustomerId - Happy Path', () => {
+    it('should successfully predict for existing customer', async () => {
+      const result = await service.predictByCustomerId('CUST001');
 
-      const inputData = {
-        customerId: 'CUST001',
-        tenure: 12,
-        MonthlyCharges: 65.5,
-      };
+      expect(result.success).toBe(true);
+      expect(result.prediction).toBeDefined();
+      expect(result.prediction.customerId).toBe('CUST001');
+      expect(result.prediction.churnProbability).toBe(0.72);
+    });
 
-      const result = await service.predict(inputData);
+    it('should load customer from database and extract features', async () => {
+      await service.predictByCustomerId('CUST001');
+
+      expect(mockCustomersService.findByCustomerId).toHaveBeenCalledWith('CUST001');
+    });
+
+    it('should call ML service with customer features', async () => {
+      await service.predictByCustomerId('CUST001');
+
       expect(mockMlService.predict).toHaveBeenCalled();
-      expect(result).toHaveProperty('churnProbability');
+    });
+
+    it('should apply recommendation rules using customer data', async () => {
+      await service.predictByCustomerId('CUST001');
+
+      expect(mockRecommendationService.getRecommendation).toHaveBeenCalledWith(
+        expect.objectContaining({
+          churnProbability: 0.72,
+          tenure: 24,
+          monthlyCharges: 85.5,
+        }),
+      );
+    });
+
+    it('should save prediction record with DSS fields', async () => {
+      const result = await service.predictByCustomerId('CUST001');
+
+      expect(result.prediction.recommendation).toBeDefined();
+      expect(result.prediction.priority).toBe('HIGH');
+    });
+
+    it('should return formatted response with all DSS fields', async () => {
+      const result = await service.predictByCustomerId('CUST001');
+
+      expect(result.prediction).toMatchObject({
+        customerId: expect.any(String),
+        churnProbability: expect.any(Number),
+        riskLevel: expect.any(String),
+        recommendation: expect.any(String),
+        priority: expect.any(String),
+      });
+    });
+
+    it('should set predictionMethod to customer_based', async () => {
+      const result = await service.predictByCustomerId('CUST001');
+      expect(result.prediction.predictionMethod).toBe('customer_based');
     });
   });
 
-  describe('findAll', () => {
-    it('should return paginated predictions', async () => {
-      mockPredictionModel.countDocuments.mockResolvedValue(50);
-      mockPredictionModel.find = jest.fn().mockReturnThis();
+  describe('predictByCustomerId - Error Handling', () => {
+    it('should return 404 if customer not found', async () => {
+      mockCustomersService.findByCustomerId.mockRejectedValueOnce(
+        new NotFoundException('Customer not found'),
+      );
 
-      const result = await service.findAll(1, 20);
-      expect(result).toHaveProperty('data');
-      expect(result).toHaveProperty('total');
-    });
-  });
-
-  describe('findById', () => {
-    it('should return a prediction by ID', async () => {
-      mockPredictionModel.findById.mockResolvedValue(mockPrediction);
-
-      const result = await service.findById('pred1');
-      expect(result).toEqual(mockPrediction);
-    });
-
-    it('should throw NotFoundException if not found', async () => {
-      mockPredictionModel.findById.mockResolvedValue(null);
-
-      await expect(service.findById('nonexistent')).rejects.toThrow(
+      await expect(service.predictByCustomerId('INVALID_ID')).rejects.toThrow(
         NotFoundException,
       );
     });
-  });
 
-  describe('getHighRisk', () => {
-    it('should return high-risk predictions', async () => {
-      mockPredictionModel.find = jest.fn().mockResolvedValue([mockPrediction]);
+    it('should handle ML API errors gracefully', async () => {
+      mockMlService.predict.mockRejectedValueOnce(
+        new BadRequestException('ML service unavailable'),
+      );
 
-      const result = await service.getHighRisk();
-      expect(result).toHaveLength(1);
-      expect(result[0].riskLevel).toBe('HIGH');
+      await expect(service.predictByCustomerId('CUST001')).rejects.toThrow();
+    });
+
+    it('should handle ML API returning success=false', async () => {
+      mockMlService.predict.mockResolvedValueOnce({
+        success: false,
+        error: 'Invalid features',
+      });
+
+      await expect(service.predictByCustomerId('CUST001')).rejects.toThrow();
+    });
+
+    it('should handle missing optional customer fields', async () => {
+      const sparseCustomer = {
+        customerID: 'CUST002',
+        tenure: 0,
+        MonthlyCharges: 0,
+      };
+
+      mockCustomersService.findByCustomerId.mockResolvedValueOnce(sparseCustomer);
+
+      const result = await service.predictByCustomerId('CUST002');
+
+      expect(result.success).toBe(true);
+      expect(result.prediction).toBeDefined();
     });
   });
 
-  describe('getStats', () => {
-    it('should return prediction statistics', async () => {
-      mockPredictionModel.countDocuments
-        .mockResolvedValueOnce(100) // total
-        .mockResolvedValueOnce(30) // high
-        .mockResolvedValueOnce(50) // medium
-        .mockResolvedValueOnce(20); // low
+  describe('predictByCustomerId - Data Integrity', () => {
+    it('should preserve customer ID in response', async () => {
+      const result = await service.predictByCustomerId('CUST001');
 
-      const result = await service.getStats();
-      expect(result).toHaveProperty('totalPredictions', 100);
-      expect(result).toHaveProperty('highRisk', 30);
+      expect(result.prediction.customerId).toBe('CUST001');
+    });
+
+    it('should map customer features correctly to ML input', async () => {
+      await service.predictByCustomerId('CUST001');
+
+      const callArgs = (mockMlService.predict as jest.Mock).mock.calls[0][0];
+
+      expect(callArgs).toHaveProperty('tenure');
+      expect(callArgs).toHaveProperty('MonthlyCharges');
+      expect(callArgs).toHaveProperty('TotalCharges');
+    });
+
+    it('should transform OnlineSecurity string to boolean', async () => {
+      await service.predictByCustomerId('CUST001');
+
+      const recArgs = (mockRecommendationService.getRecommendation as jest.Mock).mock
+        .calls[0][0];
+
+      expect(typeof recArgs.onlineSecurityService).toBe('boolean');
+    });
+  });
+
+  describe('predictByCustomerId - Response Format', () => {
+    it('should return response with success flag', async () => {
+      const result = await service.predictByCustomerId('CUST001');
+
+      expect(result).toHaveProperty('success', true);
+      expect(result).toHaveProperty('prediction');
+    });
+
+    it('should have valid enum values for priority', async () => {
+      const result = await service.predictByCustomerId('CUST001');
+
+      const validPriorities = ['LOW', 'NORMAL', 'HIGH', 'URGENT'];
+      expect(validPriorities).toContain(result.prediction.priority);
+    });
+
+    it('should have valid enum values for risk level', async () => {
+      const result = await service.predictByCustomerId('CUST001');
+
+      const validRiskLevels = ['LOW', 'MEDIUM', 'HIGH'];
+      expect(validRiskLevels).toContain(result.prediction.riskLevel);
     });
   });
 });

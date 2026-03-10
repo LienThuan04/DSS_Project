@@ -1,3 +1,9 @@
+export interface TopFactor {
+  feature: string;
+  value: number | string;
+  impact: number;
+}
+
 export interface Customer {
   _id?: string;
   customerID: string;
@@ -16,6 +22,7 @@ export interface Customer {
 }
 
 export interface Prediction {
+  id?: string;
   _id?: string;
   customerId: string;
   customerName?: string;
@@ -23,6 +30,8 @@ export interface Prediction {
   riskLevel: 'HIGH' | 'MEDIUM' | 'LOW';
   recommendation: string;
   priority?: 'URGENT' | 'HIGH' | 'NORMAL';
+  reasonCodes?: string[];
+  topFactors?: TopFactor[];
   createdAt?: string;
   inputData?: Record<string, any>;
   status?: string;

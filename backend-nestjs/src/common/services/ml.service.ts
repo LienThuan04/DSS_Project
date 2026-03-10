@@ -22,6 +22,7 @@ export class MlService {
     riskLevel?: string;
     recommendation?: string;
     priority?: string;
+    topFactors?: Array<{ feature: string; value: string | number; impact: number }>;
     error?: string;
   }> {
     try {
@@ -36,6 +37,7 @@ export class MlService {
           riskLevel: response.data.risk_level,
           recommendation: response.data.recommendation,
           priority: response.data.priority,
+          topFactors: response.data.top_factors || [],
         };
       } else {
         return {

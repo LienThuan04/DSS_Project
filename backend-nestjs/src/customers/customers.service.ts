@@ -3,10 +3,14 @@ import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { Customer } from './schemas/customer.schema';
 import { CreateCustomerDto, UpdateCustomerDto } from './dto/create-customer.dto';
+import { ValidationService } from '../common/services/validation.service';
 
 @Injectable()
 export class CustomersService {
-  constructor(@InjectModel(Customer.name) private customerModel: Model<Customer>) {}
+  constructor(
+    @InjectModel(Customer.name) private customerModel: Model<Customer>,
+    private validationService: ValidationService,
+  ) {}
 
   async create(createCustomerDto: CreateCustomerDto): Promise<Customer> {
     const createdCustomer = new this.customerModel(createCustomerDto);
@@ -75,42 +79,71 @@ export class CustomersService {
     return { message: `Customer ${id} deleted successfully` };
   }
 
-  async importFromCsv(customers: CreateCustomerDto[]): Promise<{ imported: number; errors: any[] }> {
+  async importFromCsv(customers: CreateCustomerDto[]): Promise<{ 
+    imported: number; 
+    errors: any[];
+    validationErrors: any[];
+  }> {
     if (customers.length === 0) {
-      return { imported: 0, errors: [] };
+      return { imported: 0, errors: [], validationErrors: [] };
+    }
+
+    // Validate all records first
+    const validationErrors: any[] = [];
+    const validRecords: CreateCustomerDto[] = [];
+
+    for (let i = 0; i < customers.length; i++) {
+      const validationResult = this.validationService.validateRecord(customers[i], i + 2); // +2 because row 1 is header
+      if (validationResult.valid === false) {
+        validationErrors.push(validationResult.errors);
+      } else {
+        validRecords.push(customers[i]);
+      }
+    }
+
+    // If all records are invalid, return early
+    if (validRecords.length === 0) {
+      return {
+        imported: 0,
+        errors: [],
+        validationErrors,
+      };
     }
 
     try {
       // Use insertMany for bulk insert (much faster than sequential inserts)
-      const result = await this.customerModel.insertMany(customers, { ordered: false });
+      const result = await this.customerModel.insertMany(validRecords, { ordered: false });
       return {
         imported: result.length,
         errors: [],
+        validationErrors,
       };
     } catch (error: any) {
       // Handle partial insert errors
       if (error.code === 11000) {
         // Duplicate key error - some records were inserted
         const imported = error.result?.insertedIds?.length || 0;
+        const duplicateErrors = error.writeErrors?.map((e: any) => ({
+          customer: validRecords[e.index]?.customerID,
+          error: 'Duplicate customer ID',
+        })) || [];
         return {
           imported,
-          errors: error.writeErrors?.map((e: any) => ({
-            customer: customers[e.index]?.customerID,
-            error: 'Duplicate customer ID',
-          })) || [],
+          errors: duplicateErrors,
+          validationErrors,
         };
       }
       
       // Fall back to sequential insert for other errors
       const results = [];
-      const errors = [];
+      const dbErrors = [];
 
-      for (const customer of customers) {
+      for (const customer of validRecords) {
         try {
           const created = await this.create(customer);
           results.push(created);
         } catch (err: any) {
-          errors.push({
+          dbErrors.push({
             customer: customer.customerID,
             error: err.message,
           });
@@ -119,7 +152,8 @@ export class CustomersService {
 
       return {
         imported: results.length,
-        errors,
+        errors: dbErrors,
+        validationErrors,
       };
     }
   }
@@ -227,6 +261,111 @@ export class CustomersService {
       churned,
       retained,
       churnRate: `${churnRate}%`,
+    };
+  }
+
+  async getSegmentedChurnStats(): Promise<{
+    byContract: any[];
+    byInternetService: any[];
+    byPaymentMethod: any[];
+  }> {
+    // Churn by Contract
+    const contractGroups = await this.customerModel.aggregate([
+      {
+        $group: {
+          _id: '$Contract',
+          total: { $sum: 1 },
+          churned: {
+            $sum: {
+              $cond: [{ $eq: ['$Churn', 'Yes'] }, 1, 0],
+            },
+          },
+        },
+      },
+      {
+        $project: {
+          _id: 0,
+          name: '$_id',
+          total: 1,
+          churned: 1,
+          churnRate: {
+            $cond: [
+              { $eq: ['$total', 0] },
+              0,
+              { $multiply: [{ $divide: ['$churned', '$total'] }, 100] },
+            ],
+          },
+        },
+      },
+      { $sort: { name: 1 } },
+    ]);
+
+    // Churn by Internet Service
+    const internetGroups = await this.customerModel.aggregate([
+      {
+        $group: {
+          _id: '$InternetService',
+          total: { $sum: 1 },
+          churned: {
+            $sum: {
+              $cond: [{ $eq: ['$Churn', 'Yes'] }, 1, 0],
+            },
+          },
+        },
+      },
+      {
+        $project: {
+          _id: 0,
+          name: '$_id',
+          total: 1,
+          churned: 1,
+          churnRate: {
+            $cond: [
+              { $eq: ['$total', 0] },
+              0,
+              { $multiply: [{ $divide: ['$churned', '$total'] }, 100] },
+            ],
+          },
+        },
+      },
+      { $sort: { name: 1 } },
+    ]);
+
+    // Churn by Payment Method
+    const paymentGroups = await this.customerModel.aggregate([
+      {
+        $group: {
+          _id: '$PaymentMethod',
+          total: { $sum: 1 },
+          churned: {
+            $sum: {
+              $cond: [{ $eq: ['$Churn', 'Yes'] }, 1, 0],
+            },
+          },
+        },
+      },
+      {
+        $project: {
+          _id: 0,
+          name: '$_id',
+          total: 1,
+          churned: 1,
+          churnRate: {
+            $cond: [
+              { $eq: ['$total', 0] },
+              0,
+              { $multiply: [{ $divide: ['$churned', '$total'] }, 100] },
+            ],
+          },
+        },
+      },
+      { $sort: { name: 1 } },
+    ]);
+
+    return {
+      byContract: contractGroups || [],
+      byInternetService: internetGroups || [],
+      byPaymentMethod: paymentGroups || [],
     };
   }
 }

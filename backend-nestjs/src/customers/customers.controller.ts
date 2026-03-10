@@ -65,6 +65,11 @@ export class CustomersController {
     return this.customersService.getStats();
   }
 
+  @Get('stats/segments')
+  getSegmentedChurnStats() {
+    return this.customersService.getSegmentedChurnStats();
+  }
+
   @Get('by-id/:customerId')
   findByCustomerId(@Param('customerId') customerId: string) {
     return this.customersService.findByCustomerId(customerId);

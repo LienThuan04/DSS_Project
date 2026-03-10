@@ -3,11 +3,12 @@ import { MongooseModule } from '@nestjs/mongoose';
 import { CustomersService } from './customers.service';
 import { CustomersController } from './customers.controller';
 import { Customer, CustomerSchema } from './schemas/customer.schema';
+import { ValidationService } from '../common/services/validation.service';
 
 @Module({
   imports: [MongooseModule.forFeature([{ name: Customer.name, schema: CustomerSchema }])],
   controllers: [CustomersController],
-  providers: [CustomersService],
+  providers: [CustomersService, ValidationService],
   exports: [CustomersService],
 })
 export class CustomersModule {}

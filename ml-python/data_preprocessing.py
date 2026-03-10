@@ -4,16 +4,18 @@ Data Preprocessing Module
 - Clean missing values
 - Convert Yes/No to binary
 - Encode categorical features
-- Save cleaned dataset
+- Save cleaned dataset and encoders
 """
 
 import pandas as pd
 import numpy as np
 from sklearn.preprocessing import LabelEncoder
+import joblib
 import os
 
 CSV_PATH = os.path.join('..', 'WA_Fn-UseC_-Telco-Customer-Churn.csv')
 OUTPUT_PATH = 'clean_dataset.csv'
+ENCODERS_PATH = 'label_encoders.pkl'
 
 def load_data():
     """Load raw dataset."""
@@ -85,17 +87,21 @@ def clean_data(df):
     
     return df_clean, label_encoders
 
-def save_cleaned_dataset(df_clean):
-    """Save cleaned dataset to CSV."""
+def save_cleaned_dataset(df_clean, encoders):
+    """Save cleaned dataset to CSV and encoders to pickle file."""
     df_clean.to_csv(OUTPUT_PATH, index=False)
     print(f"\n✓ Saved cleaned dataset to {OUTPUT_PATH}")
+    
+    # Save label encoders for use in predict_api.py
+    joblib.dump(encoders, ENCODERS_PATH)
+    print(f"✓ Saved label encoders to {ENCODERS_PATH}")
 
 def main():
     """Main preprocessing pipeline."""
     df = load_data()
     inspect_data(df)
     df_clean, encoders = clean_data(df)
-    save_cleaned_dataset(df_clean)
+    save_cleaned_dataset(df_clean, encoders)
     print("\n===== Preprocessing Complete =====")
     return df_clean, encoders
 

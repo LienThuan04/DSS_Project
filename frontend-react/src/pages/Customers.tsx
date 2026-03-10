@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from 'react';
-import { Search, Plus, Edit, Trash2, Loader, AlertCircle, Upload } from 'lucide-react';
-import { customersApi } from '../services/api';
-import { Customer } from '../types';
+import { Search, Plus, Edit, Trash2, Loader, AlertCircle, Upload, Zap } from 'lucide-react';
+import { customersApi, predictionsApi } from '../services/api';
+import { Customer, Prediction } from '../types';
+import PredictionModal from '../components/PredictionModal';
 
 const Customers: React.FC = () => {
   const [customers, setCustomers] = useState<Customer[]>([]);
@@ -18,6 +19,14 @@ const Customers: React.FC = () => {
   const [formData, setFormData] = useState<Customer>({
     customerID: '',
   });
+
+  // Prediction modal state
+  const [showPredictionModal, setShowPredictionModal] = useState(false);
+  const [predictingCustomerId, setPredictingCustomerId] = useState<string | null>(null);
+  const [predicatingCustomerName, setPredicatingCustomerName] = useState<string | null>(null);
+  const [predictionLoading, setPredictionLoading] = useState(false);
+  const [predictionError, setPredictionError] = useState<string | null>(null);
+  const [prediction, setPrediction] = useState<Prediction | null>(null);
 
   // Form validation
   const validateForm = (): boolean => {
@@ -94,6 +103,51 @@ const Customers: React.FC = () => {
         setError(err.response?.data?.message || 'Failed to delete customer');
       }
     }
+  };
+
+  const handlePredict = async (customerId: string, customerName?: string) => {
+    try {
+      setPredictingCustomerId(customerId);
+      setPredicatingCustomerName(customerName || null);
+      setShowPredictionModal(true);
+      setPredictionLoading(true);
+      setPredictionError(null);
+      setPrediction(null);
+
+      const response = await predictionsApi.predictByCustomerId(customerId);
+      const predictionData = response.data.data || response.data;
+      
+      setPrediction({
+        _id: predictionData._id,
+        customerId: customerId,
+        customerName: customerName,
+        churnProbability: predictionData.churnProbability,
+        riskLevel: predictionData.riskLevel,
+        recommendation: predictionData.recommendation,
+        priority: predictionData.priority,
+        reasonCodes: predictionData.reasonCodes,
+        topFactors: predictionData.topFactors,
+        createdAt: predictionData.createdAt,
+        inputData: predictionData.inputData,
+        status: predictionData.status,
+      });
+    } catch (err: any) {
+      const errorMessage = err.response?.data?.error || 
+                          err.response?.data?.message || 
+                          err.message ||
+                          'Failed to get prediction';
+      setPredictionError(errorMessage);
+    } finally {
+      setPredictionLoading(false);
+    }
+  };
+
+  const handleClosePredictionModal = () => {
+    setShowPredictionModal(false);
+    setPredictingCustomerId(null);
+    setPredicatingCustomerName(null);
+    setPrediction(null);
+    setPredictionError(null);
   };
 
   const handleCsvUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -321,12 +375,22 @@ const Customers: React.FC = () => {
                       </span>
                     </td>
                     <td className="px-4 py-3 text-right text-sm">
-                      <button
-                        onClick={() => handleDelete(customer._id!)}
-                        className="text-red-600 hover:text-red-800"
-                      >
-                        <Trash2 size={16} />
-                      </button>
+                      <div className="flex items-center justify-end gap-2">
+                        <button
+                          onClick={() => handlePredict(customer.customerID, customer.customerID)}
+                          className="inline-flex items-center gap-1 px-3 py-1 text-xs font-medium text-white bg-blue-600 rounded hover:bg-blue-700 transition-colors"
+                          title="Generate prediction for this customer"
+                        >
+                          <Zap size={14} />
+                          Predict
+                        </button>
+                        <button
+                          onClick={() => handleDelete(customer._id!)}
+                          className="text-red-600 hover:text-red-800"
+                        >
+                          <Trash2 size={16} />
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))}
@@ -357,6 +421,17 @@ const Customers: React.FC = () => {
           </div>
         </div>
       </div>
+
+      {/* Prediction Modal */}
+      <PredictionModal
+        isOpen={showPredictionModal}
+        isLoading={predictionLoading}
+        prediction={prediction}
+        error={predictionError}
+        customerId={predictingCustomerId || ''}
+        customerName={predicatingCustomerName || undefined}
+        onClose={handleClosePredictionModal}
+      />
     </div>
   );
 };

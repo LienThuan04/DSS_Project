@@ -14,6 +14,9 @@ import {
 import { customersApi, predictionsApi } from '../services/api';
 import { Stats } from '../types';
 import { AlertCircle, Loader } from 'lucide-react';
+import ChurnByContractChart from '../components/ChurnByContractChart';
+import ChurnByInternetServiceChart from '../components/ChurnByInternetServiceChart';
+import ChurnByPaymentMethodChart from '../components/ChurnByPaymentMethodChart';
 
 const StatCard = ({ label, value, color = 'text-blue-600' }: any) => (
   <div className="card">
@@ -137,6 +140,13 @@ const Dashboard: React.FC = () => {
             </BarChart>
           </ResponsiveContainer>
         </div>
+      </div>
+
+      {/* Segmentation Charts */}
+      <div className="grid gap-6 lg:grid-cols-3">
+        <ChurnByContractChart />
+        <ChurnByInternetServiceChart />
+        <ChurnByPaymentMethodChart />
       </div>
     </div>
   );
