@@ -115,7 +115,8 @@ const PredictionForm: React.FC<PredictionFormProps> = ({ onSubmit, isLoading = f
       };
 
       const response = await predictionsApi.predictRaw(payload);
-      const result = response.data; // Extract data from axios response
+      // Backend returns { success: true, prediction: {...} } structure
+      const result = response.data.prediction || response.data.data || response.data;
       setResult(result);
       if (onSubmit) {
         onSubmit(result);

@@ -1,19 +1,311 @@
 # DSS Antigravity - Hệ Thống Hỗ Trợ Quyết Định Dự Đoán Churn Khách Hàng
 
-Hướng dẫn hoàn chỉnh để chạy dự án từ A-Z. Dự án này bao gồm:
+Hệ thống dự đoán churn khách hàng sử dụng Machine Learning. Bao gồm:
 - **Backend**: NestJS API trên port 3001
 - **Frontend**: React UI trên port 3000  
 - **ML API**: Python Flask API trên port 5000
-- **Database**: MongoDB (cloud hoặc local)
+- **Database**: MongoDB
 
 ---
 
-## ⚡ TÓM TẮT NHANH (QUICK START)
+## ⚡ QUICK START - CHỈ 2 LỆNH DUY NHẤT
 
-**Nếu bạn không muốn đọc nhiều, làm theo 3 bước này:**
+### 🎯 Lần Đầu Tiên: Chạy setup 1 lần
 
-### Bước 1️⃣: Tạo file `.env` (1 phút)
-Tạo file tên `.env` trong thư mục `backend-nestjs/` với nội dung:
+Mở **PowerShell/Command Prompt** trong thư mục gốc dự án và chạy:
+
+```cmd
+setup.bat
+```
+
+**Công việc tự động:**
+- ✅ Kiểm tra Node.js, Python
+- ✅ Detect pnpm/npm (dùng cái nào có sẵn)
+- ✅ Cài dependencies cho Backend (NestJS)
+- ✅ Cài dependencies cho Frontend (React)
+- ✅ Tạo Python virtual environment
+- ✅ Cài Python packages
+- ✅ Preprocess data
+- ✅ Train ML model
+- ✅ Tự động chạy `start-all.bat`
+
+⏱️ **Mất khoảng 10-20 phút lần đầu** (tuỳ vào tốc độ internet)
+
+---
+
+### 🚀 Lần Sau: Chỉ cần chạy start-all.bat
+
+Mở **PowerShell/Command Prompt** và chạy:
+
+```cmd
+start-all.bat
+```
+
+**Công việc:**
+- ✅ Khởi chạy Backend (NestJS) trên port 3001
+- ✅ Khởi chạy Frontend (React) trên port 3000
+- ✅ Khởi chạy ML API (Python) trên port 5000
+
+⏱️ **Mất khoảng 30-60 giây**
+
+---
+
+## 📱 Truy Cập Ứng Dụng
+
+Sau khi chạy, truy cập:
+- **Frontend**: http://localhost:3000
+- **Backend API**: http://localhost:3001/api
+- **ML API**: http://localhost:5000
+
+---
+
+## 📋 YÊU CẦU HỆ THỐNG
+
+Trước khi chạy, đảm bảo máy có:
+
+### 1️⃣ Node.js & npm
+- **Tải**: https://nodejs.org/
+- **Phiên bản tối thiểu**: v14.0.0+
+- **Kiểm tra**:
+  ```cmd
+  node --version
+  npm --version
+  ```
+
+### 2️⃣ Python
+- **Tải**: https://www.python.org/
+- **Phiên bản tối thiểu**: Python 3.8+
+- **Kiểm tra**:
+  ```cmd
+  python --version
+  ```
+
+### 3️⃣ MongoDB
+**Chọn 1 trong 2:**
+
+**A. MongoDB Cloud (Khuyến nghị)**
+1. Truy cập: https://www.mongodb.com/cloud/atlas
+2. Tạo account miễn phí
+3. Tạo cluster
+4. Lấy connection string
+
+**B. MongoDB Local**
+1. Tải: https://www.mongodb.com/try/download/community
+2. Cài đặt và chạy service
+3. Connection string: `mongodb://localhost:27017/DSS2`
+
+---
+
+## � CẤU HÌNH ENVIRONMENT VARIABLES
+
+Sau khi pull dự án về, bạn **CÓ THỂ** cần thiết lập environment variables cho Backend và Frontend.
+
+**Lưu ý:** File `.env` được tạo **tự động** bởi `setup.bat`, nhưng bạn có thể cấu hình tùy chỉnh.
+
+### Backend Environment Setup
+
+File cấu hình: `backend-nestjs/.env`
+
+**Tạo file mới nếu chưa có:**
+```bash
+# Từ thư mục gốc của dự án
+cd backend-nestjs
+```
+
+**Nội dung file `.env`:**
+```env
+MONGODB_URI="mongodb+srv://username:password@cluster.mongodb.net/DSS2?appName=DSS"
+PORT=3001
+NODE_ENV=development
+ML_API_URL=http://localhost:5000
+```
+
+**Chi tiết từng biến:**
+
+| Biến | Mô tả | Ví dụ | Ghi chú |
+|------|-------|--------|---------|
+| **MONGODB_URI** | Connection string MongoDB | `mongodb://localhost:27017/DSS2` hoặc `mongodb+srv://user:pass@cluster.mongodb.net/DSS2` | **Bắt buộc** - Chỉnh sửa user/password của bạn |
+| **PORT** | Port chạy Backend | `3001` | Mặc định 3001 |
+| **NODE_ENV** | Môi trường | `development` hoặc `production` | `development` cho local testing |
+| **ML_API_URL** | URL của ML API | `http://localhost:5000` | Đảm bảo ML API chạy trên port này |
+
+**Ví dụ MongoDB URI cho các trường hợp:**
+
+**1. MongoDB Local (mặc định):**
+```env
+MONGODB_URI=mongodb://localhost:27017/DSS2
+```
+
+**2. MongoDB Cloud (Atlas) - Khuyên dùng:**
+```env
+MONGODB_URI=mongodb+srv://your_username:your_password@your_cluster.mongodb.net/DSS2?retryWrites=true&w=majority
+```
+_Thay `your_username` và `your_password` bằng thông tin tài khoản MongoDB Atlas của bạn_
+
+**3. MongoDB Running on Different Port:**
+```env
+MONGODB_URI=mongodb://localhost:27018/DSS2
+```
+
+---
+
+### Frontend Environment Setup
+
+File cấu hình: `frontend-react/.env.local`
+
+**Tạo file mới nếu chưa có:**
+```bash
+# Từ thư mục gốc của dự án
+cd frontend-react
+```
+
+**Nội dung file `.env.local`:**
+```env
+REACT_APP_API_URL=http://localhost:3001/api
+```
+
+**Chi tiết từng biến:**
+
+| Biến | Mô tả | Ví dụ | Ghi chú |
+|------|-------|--------|---------|
+| **REACT_APP_API_URL** | URL Backend API | `http://localhost:3001/api` | Phải kết thúc bằng `/api` |
+
+**Ví dụ cho các trường hợp:**
+
+**1. Local Development (mặc định):**
+```env
+REACT_APP_API_URL=http://localhost:3001/api
+```
+
+**2. Backend trên máy khác:**
+```env
+REACT_APP_API_URL=http://192.168.1.100:3001/api
+```
+
+**3. Production (Deployed Backend):**
+```env
+REACT_APP_API_URL=https://api.yourdomain.com/api
+```
+
+---
+
+### ML Python Setup
+
+Nơi đặt dữ liệu training: `WA_Fn-UseC_-Telco-Customer-Churn.csv`
+
+**Không cần file `.env` cho ML API**, nhưng kiểm tra:**
+- File dữ liệu CSV ở thư mục gốc: `DSS_Antigravity/WA_Fn-UseC_-Telco-Customer-Churn.csv`
+- Python 3.8+ đã cài
+- Virtual environment sẽ được tạo tự động bởi `setup.bat`
+
+---
+
+### ⚡ Nhanh Chóng: Auto-Setup
+
+Lần chạy đầu tiên, `setup.bat` sẽ **tự động tạo** các file `.env`:
+
+```
+setup.bat
+  ↓
+  ├─ Kiểm tra Backend .env → Tạo nếu chưa có
+  ├─ Kiểm tra Frontend .env.local → Tạo nếu chưa có
+  ├─ Tạo Python venv
+  ├─ Cài đặt dependencies
+  └─ Chạy setup.bat tự động
+```
+
+**Sau đó, chỉ cần chạy:**
+```cmd
+start-all.bat
+```
+
+---
+
+### 🔍 Kiểm Tra Cấu Hình
+
+Sau khi tạo file `.env`, kiểm tra:
+
+**Backend:**
+```bash
+# Kiểm tra file tồn tại
+ls -la backend-nestjs/.env
+
+# Hoặc trên Windows:
+dir backend-nestjs\.env
+```
+
+**Frontend:**
+```bash
+# Kiểm tra file tồn tại
+ls -la frontend-react/.env.local
+
+# Hoặc trên Windows:
+dir frontend-react\.env.local
+```
+
+---
+
+### ⚠️ Lỗi Thường Gặp Với Environment Variables
+
+**Lỗi 1: "Cannot connect to MongoDB"**
+```
+❌ MONGODB_URI sai
+✅ Kiểm tra:
+   - User/password đúng?
+   - Cluster name đúng?
+   - IP whitelist cho phép? (MongoDB Atlas → Security → Network Access)
+   - Nếu local, MongoDB service đã chạy? (mongod)
+```
+
+**Lỗi 2: "Failed to connect API at http://localhost:3001/api"**
+```
+❌ REACT_APP_API_URL sai hoặc Backend chưa chạy
+✅ Kiểm tra:
+   - Backend đã chạy? (npm run start:dev ở backend-nestjs/)
+   - Port 3001 có thể truy cập?
+   - Thay thế localhost bằng 127.0.0.1 nếu cần
+```
+
+**Lỗi 3: "ML API not found"**
+```
+❌ ML_API_URL sai hoặc ML API chưa chạy
+✅ Kiểm tra:
+   - ML API đã chạy? (python predict_api.py ở ml-python/)
+   - Port 5000 còn trống?
+   - Firewall cho phép kết nối?
+```
+
+**Lỗi 4: ".env file không được tạo"**
+```
+❌ setup.bat không có quyền ghi
+✅ Giải pháp:
+   - Chạy PowerShell/CMD dưới quyền Admin
+   - Hoặc tạo file thủ công bằng text editor
+   - Copy nội dung từ phần hướng dẫn ở trên
+```
+
+---
+
+## �📂 Cấu Trúc Thư Mục
+
+```
+DSS_Antigravity/
+├── setup.bat                          ← Chạy lần đầu
+├── start-all.bat                      ← Chạy từ lần 2 trở đi
+├── WA_Fn-UseC_-Telco-Customer-Churn.csv  ← File dữ liệu training
+├── backend-nestjs/                    ← Backend source code
+├── frontend-react/                    ← Frontend source code
+├── ml-python/                         ← ML model code
+└── docs/                              ← Documentation
+```
+
+---
+
+## ⚙️ Cấu Hình Backend (.env)
+
+File `.env` sẽ được tạo **tự động** bởi `setup.bat` ở đường dẫn: `backend-nestjs/.env`
+
+Nếu cần chỉnh sửa, mở file `backend-nestjs/.env`:
 
 ```env
 MONGODB_URI=mongodb://localhost:27017/DSS2
@@ -22,220 +314,74 @@ PORT=3001
 NODE_ENV=development
 ```
 
-_Lưu ý: Thay `mongodb://localhost:27017/DSS2` bằng MongoDB URI của bạn (xem BƯỚC 5 dưới)_
-
-### Bước 2️⃣: Đặt file dữ liệu (< 1 phút)
-Đảm bảo file `WA_Fn-UseC_-Telco-Customer-Churn.csv` nằm trong **thư mục gốc** của dự án (cùng cấp với `start-all.bat`)
-
-### Bước 3️⃣: Chạy dự án (7-15 phút lần đầu)
-**Double-click** file `start-all.bat` trong thư mục gốc
-
-Chờ tất cả terminal mở → Truy cập: **http://localhost:3000**
-
-**Xong!** 🎉
+**Với MongoDB Cloud, thay thế:**
+```env
+MONGODB_URI=mongodb+srv://your_username:your_password@your_cluster.mongodb.net/DSS2?retryWrites=true&w=majority
+```
 
 ---
 
-## 📖 HƯỚNG DẪN CHI TIẾT (Đọc nếu muốn hiểu rõ)
+## 📊 Dữ Liệu Training
 
-## 📋 YÊU CẦU HỆ THỐNG
+File dữ liệu CSV phải:
+- **Tên file**: `WA_Fn-UseC_-Telco-Customer-Churn.csv`
+- **Vị trí**: Thư mục **gốc** dự án (cùng với `setup.bat`)
 
-Trước khi bắt đầu, đảm bảo máy của bạn có cài đặt:
-
-### 1. Node.js & npm (cho Backend + Frontend)
-- **Tải từ**: https://nodejs.org/
-- **Phiên bản tối thiểu**: v14.0.0 trở lên
-- **Kiểm tra cài đặt**:
-  ```cmd
-  node --version
-  npm --version
-  ```
-
-### 2. Python (cho ML Pipeline)
-- **Tải từ**: https://www.python.org/
-- **Phiên bản tối thiểu**: Python 3.8 trở lên
-- **Kiểm tra cài đặt**:
-  ```cmd
-  python --version
-  ```
-
-### 3. MongoDB (Database)
-**Chọn 1 trong 2 tùy chọn:**
-
-**Option A: MongoDB Cloud (Khuyến nghị)**
-1. Truy cập: https://www.mongodb.com/cloud/atlas
-2. Tạo tài khoản miễn phí
-3. Tạo cluster mới
-4. Lấy connection string: `mongodb+srv://username:password@cluster.mongodb.net/`
-
-**Option B: MongoDB Local**
-1. Tải từ: https://www.mongodb.com/try/download/community
-2. Cài đặt và chạy dịch vụ
-3. Connection string: `mongodb://localhost:27017`
+**Dữ liệu ML:**
+- Được xử lý tự động bởi `ml-python/data_preprocessing.py`
+- Model được train bởi `ml-python/train_model.py`
+- Model được lưu tại: `ml-python/model.pkl`
 
 ---
 
-## 🚀 BƯỚC 1: CLONE / DOWNLOAD PROJECT
+## 🛑 Khắc Phục Sự Cố
 
-1. **Mở PowerShell hoặc Command Prompt**
-2. **Điều hướng đến vị trí muốn lưu code** (ví dụ Desktop):
-   ```cmd
-   cd Desktop
-   ```
-3. **Clone project** (nếu dùng Git):
-   ```cmd
-   git clone <repository-url>
-   cd DSS_Antigravity
-   ```
-   
-   Hoặc **download ZIP** từ GitHub → extract → mở folder
+### Lỗi: "Node.js is not installed"
+→ Cài Node.js từ https://nodejs.org/
 
-4. **Kiểm tra folder có đúng không:**
-   ```cmd
-   # Bạn nên thấy các thư mục này:
-   dir
-   # Output sẽ hiển thị:
-   # backend-nestjs/
-   # frontend-react/
-   # ml-python/
-   # start-all.bat
-   # README.md
-   # ...
-   ```
+### Lỗi: "Python is not installed"
+→ Cài Python từ https://www.python.org/
+
+### Lỗi: MongoDB connection error
+→ Kiểm tra:
+- MongoDB đã chạy?
+- MONGODB_URI trong `.env` đúng chưa?
+
+### Lỗi: Port already in use
+→ Có service khác dùng port. Đóng ứng dụng khác hoặc thay đổi port trong `.env`
 
 ---
 
-## � BƯỚC 3: CÀI ĐẶT CÁC THƯ VIỆN (DEPENDENCIES)
+## 📖 Tài Liệu Chi Tiết
 
-### 3.1 Backend NestJS Dependencies
-
-**Thư mục**: Vào thư mục `backend-nestjs`
-
-**Cách 1: Tự động với start-all.bat (Khuyến nghị)**
-Khi chạy `start-all.bat`, nó tự động cài tất cả, bạn không cần làm gì cả.
-
-**Cách 2: Cài thủ công**
-```cmd
-# Mở cmd/PowerShell
-# Điều hướng vào thư mục backend-nestjs
-cd backend-nestjs
-
-# Cài tất cả dependencies từ package.json
-npm install
-```
-
-**Các thư viện chính:**
-- `@nestjs/core` - Framework NestJS
-- `@nestjs/mongoose` - MongoDB integration
-- `mongoose` - Database ODM
-- `axios` - HTTP client (gễi request đến ML API)
-
-### 3.2 Frontend React Dependencies
-
-**Thư mục**: Vào thư mục `frontend-react`
-
-**Cách 1: Tự động với start-all.bat (Khuyến nghị)**
-Khi chạy `start-all.bat`, nó tự động cài tất cả.
-
-**Cách 2: Cài thủ công**
-```cmd
-# Mở cmd/PowerShell
-# Điều hướng vào thư mục frontend-react
-cd frontend-react
-
-# Cài tất cả dependencies từ package.json
-npm install
-```
-
-**Các thư viện chính:**
-- `react` - UI framework
-- `typescript` - Type checking
-- `axios` - HTTP client (gọi Backend API)
-- `tailwindcss` - Styling
-- `lucide-react` - Icons
-
-### 3.3 ML Python Dependencies
-
-**Thư mục**: Vào thư mục `ml-python`
-
-**Cách 1: Tự động với start-all.bat (Khuyến nghị)**
-Khi chạy `start-all.bat`, nó tự động:
-1. Tạo Python virtual environment (`venv`)
-2. Cài tất cả packages từ `requirements.txt`
-
-**Cách 2: Cài thủ công**
-```cmd
-# Mở cmd/PowerShell
-# Điều hướng vào thư mục ml-python
-cd ml-python
-
-# Tạo virtual environment
-python -m venv venv
-
-# Kích hoạt virtual environment
-venv\Scripts\activate
-
-# Cài tất cả dependencies
-pip install -r requirements.txt
-```
-
-**Các thư viện chính trong requirements.txt:**
-- `flask` - Web framework cho ML API
-- `pandas` - Data processing
-- `scikit-learn` - Machine Learning models
-- `joblib` - Save/load models
-- `numpy` - Numerical computing
-
-**Lưu ý**: Lần đầu cài Python dependencies sẽ mất 2-3 phút (tải sklearn, pandas...)
+Xem thêm tài liệu đầy đủ:
+- [API Documentation](./docs/API.md)
+- [Tư Duy Quy Tắc Khuyến Nghị](./docs/recommendation-rules.md)
+- [Giải Thích Model](./docs/BE-03-Implementation.md)
 
 ---
 
-## 💾 BƯỚC 4: CHUẨN BỊ DỮ LIỆU TRAINING ML
+## 🎯 Tóm Tắt Quy Trình
 
-### 4.1 Kiểm tra file dữ liệu
-
-Đảm bảo bạn có file CSV dữ liệu khách hàng:
-- Tên file: `WA_Fn-UseC_-Telco-Customer-Churn.csv`
-- Đặt vào **thư mục gốc** của dự án (cùng cấp với `start-all.bat`)
-
-**Ví dụ cấu trúc:**
 ```
-DSS_Antigravity/
-├── WA_Fn-UseC_-Telco-Customer-Churn.csv  ← File CSV đặt ở đây
-├── start-all.bat
-├── backend-nestjs/
-├── frontend-react/
-└── ml-python/
-```
+Lần đầu:
+  1. setup.bat → cài đặt + train model → tự chạy start-all.bat
 
-### 4.2 Cấu trúc dữ liệu CSV
-
-File CSV phải có các cột sau (dòng header):
+Lần sau:
+  1. start-all.bat → khởi chạy 3 services
+  2. Truy cập http://localhost:3000
+  3. Done! 🎉
 ```
-customerID, gender, SeniorCitizen, Partner, Dependents, tenure, PhoneService, 
-MultipleLines, InternetService, OnlineSecurity, OnlineBackup, DeviceProtection, 
-TechSupport, StreamingTV, StreamingMovies, Contract, PaperlessBilling, 
-PaymentMethod, MonthlyCharges, TotalCharges, Churn
-```
-
-**Lưu ý**: 
-- Cột `Churn` phải có giá trị `Yes` hoặc `No`
-- Các cột khác phải matching với tên trên
 
 ---
 
-## 🛠️ BƯỚC 5: CẤU HÌNH BACKEND (.env File)
+## 📧 Support
 
-Nếu file `.env` chưa tồn tại, hãy tạo file mới với nội dung sau:
-
-```
-MONGODB_URI=mongodb+srv://username:password@cluster.mongodb.net/DSS2
-ML_API_URL=http://localhost:5000
-PORT=3001
-NODE_ENV=development
-```
-
-### 2.2 Cấu hình MongoDB URI
+Nếu gặp vấn đề, kiểm tra:
+1. Node.js, Python, MongoDB đã cài chưa?
+2. File dữ liệu CSV tồn tại chưa?
+3. Chạy `setup.bat` từ thư mục gốc chưa?
+4. Xem console output để tìm lỗi cụ thể
 
 **Nếu dùng MongoDB Cloud:**
 ```

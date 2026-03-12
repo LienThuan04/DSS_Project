@@ -128,7 +128,7 @@ const Predictions: React.FC = () => {
             <PredictionForm onSubmit={handleFormSubmit} />
           ) : result ? (
             <div className="space-y-4">
-              <PredictionResultCard prediction={result.prediction} onClose={handleNewPrediction} />
+              <PredictionResultCard prediction={result} onClose={handleNewPrediction} />
               <button
                 onClick={handleNewPrediction}
                 className="w-full px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-md transition"

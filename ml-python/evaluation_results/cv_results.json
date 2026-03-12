@@ -1,7 +1,7 @@
 {
   "model_name": "Logistic Regression",
   "n_splits": 5,
-  "timestamp": "2026-03-10T16:24:43.749635",
+  "timestamp": "2026-03-12T19:55:23.921979",
   "folds": [
     {
       "fold": 1,

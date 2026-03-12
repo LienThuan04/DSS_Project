@@ -12,6 +12,8 @@ const Customers: React.FC = () => {
   const [search, setSearch] = useState('');
   const [page, setPage] = useState(1);
   const [total, setTotal] = useState(0);
+  const [churnFilter, setChurnFilter] = useState<string>('all'); // all, yes, no
+  const [pageInput, setPageInput] = useState<string>('1');
   const [showForm, setShowForm] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
@@ -53,7 +55,18 @@ const Customers: React.FC = () => {
     try {
       setLoading(true);
       const res = await customersApi.list(page, 20, search);
-      setCustomers(res.data.data);
+      let filteredData = res.data.data;
+      
+      // Apply churn filter
+      if (churnFilter !== 'all') {
+        filteredData = filteredData.filter(c => {
+          if (churnFilter === 'yes') return c.Churn === 'Yes';
+          if (churnFilter === 'no') return c.Churn === 'No';
+          return true;
+        });
+      }
+      
+      setCustomers(filteredData);
       setTotal(res.data.total);
     } catch (err: any) {
       setError(err.response?.data?.message || 'Failed to load customers');
@@ -63,8 +76,9 @@ const Customers: React.FC = () => {
   };
 
   useEffect(() => {
+    setPageInput(page.toString());
     fetchCustomers();
-  }, [page, search]);
+  }, [page, search, churnFilter]);
 
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -115,7 +129,8 @@ const Customers: React.FC = () => {
       setPrediction(null);
 
       const response = await predictionsApi.predictByCustomerId(customerId);
-      const predictionData = response.data.data || response.data;
+      // Backend returns { success: true, prediction: {...} } structure
+      const predictionData = response.data.prediction || response.data.data || response.data;
       
       setPrediction({
         _id: predictionData._id,
@@ -305,18 +320,48 @@ const Customers: React.FC = () => {
       )}
 
       <div className="space-y-4">
-        <div className="relative">
-          <Search className="absolute left-3 top-3 text-gray-400" size={20} />
-          <input
-            type="text"
-            placeholder="Search customers..."
-            className="input pl-10"
-            value={search}
-            onChange={(e) => {
-              setSearch(e.target.value);
-              setPage(1);
-            }}
-          />
+        {/* Search and Filter Bar */}
+        <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-end">
+          <div className="flex-1 relative">
+            <Search className="absolute left-3 top-3 text-gray-400" size={20} />
+            <input
+              type="text"
+              placeholder="Search customers by ID..."
+              className="input pl-10 w-full"
+              value={search}
+              onChange={(e) => {
+                setSearch(e.target.value);
+                setPage(1);
+              }}
+            />
+          </div>
+
+          {/* Churn Filter */}
+          <div className="flex flex-col sm:flex-row gap-2 items-start sm:items-center">
+            <label className="text-sm font-medium text-gray-700">Churn Status:</label>
+            <div className="flex gap-2">
+              {[
+                { value: 'all', label: 'All' },
+                { value: 'yes', label: 'Churned' },
+                { value: 'no', label: 'Active' },
+              ].map(option => (
+                <button
+                  key={option.value}
+                  onClick={() => {
+                    setChurnFilter(option.value);
+                    setPage(1);
+                  }}
+                  className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                    churnFilter === option.value
+                      ? 'bg-blue-600 text-white'
+                      : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                  }`}
+                >
+                  {option.label}
+                </button>
+              ))}
+            </div>
+          </div>
         </div>
 
         {loading ? (
@@ -399,24 +444,73 @@ const Customers: React.FC = () => {
           </div>
         )}
 
-        <div className="flex items-center justify-between">
+        {/* Enhanced Pagination */}
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-4 bg-white p-4 rounded-lg border border-gray-200">
           <p className="text-sm text-gray-600">
-            Showing {(page - 1) * 20 + 1} to {Math.min(page * 20, total)} of {total}
+            Showing <span className="font-semibold">{(page - 1) * 20 + 1}</span> to <span className="font-semibold">{Math.min(page * 20, total)}</span> of <span className="font-semibold">{total}</span> customers
           </p>
-          <div className="flex gap-2">
+
+          <div className="flex flex-wrap items-center justify-center gap-2">
+            {/* First Page Button */}
+            <button
+              onClick={() => setPage(1)}
+              disabled={page === 1}
+              className="px-3 py-2 text-sm font-medium rounded-lg bg-gray-200 hover:bg-gray-300 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              title="Go to first page"
+            >
+              « First
+            </button>
+
+            {/* Previous Button */}
             <button
               onClick={() => setPage(Math.max(1, page - 1))}
               disabled={page === 1}
-              className="rounded-lg bg-gray-200 px-4 py-2 text-sm font-medium hover:bg-gray-300 disabled:opacity-50"
+              className="px-3 py-2 text-sm font-medium rounded-lg bg-gray-200 hover:bg-gray-300 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              title="Previous page"
             >
-              Previous
+              ‹ Prev
             </button>
+
+            {/* Page Input */}
+            <div className="flex items-center gap-2">
+              <label className="text-sm font-medium text-gray-700">Page:</label>
+              <input
+                type="number"
+                min="1"
+                max={Math.ceil(total / 20)}
+                value={pageInput}
+                onChange={(e) => setPageInput(e.target.value)}
+                onKeyPress={(e) => {
+                  if (e.key === 'Enter') {
+                    const newPage = Math.max(1, Math.min(Math.ceil(total / 20), parseInt(pageInput) || 1));
+                    setPage(newPage);
+                    setPageInput(newPage.toString());
+                  }
+                }}
+                className="w-16 px-2 py-2 text-sm border border-gray-300 rounded-lg focus:border-blue-500 focus:outline-none"
+                placeholder="1"
+              />
+              <span className="text-sm text-gray-600">of {Math.ceil(total / 20)}</span>
+            </div>
+
+            {/* Next Button */}
             <button
               onClick={() => setPage(page + 1)}
               disabled={page * 20 >= total}
-              className="rounded-lg bg-gray-200 px-4 py-2 text-sm font-medium hover:bg-gray-300 disabled:opacity-50"
+              className="px-3 py-2 text-sm font-medium rounded-lg bg-gray-200 hover:bg-gray-300 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              title="Next page"
             >
-              Next
+              Next ›
+            </button>
+
+            {/* Last Page Button */}
+            <button
+              onClick={() => setPage(Math.ceil(total / 20))}
+              disabled={page * 20 >= total}
+              className="px-3 py-2 text-sm font-medium rounded-lg bg-gray-200 hover:bg-gray-300 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              title="Go to last page"
+            >
+              Last »
             </button>
           </div>
         </div>

@@ -300,6 +300,31 @@ def predict():
         # Convert data to DataFrame
         df_input = pd.DataFrame([data.copy()])
         
+        # Categorical mappings for string-to-numeric conversion (used as fallback)
+        categorical_mappings = {
+            'gender': {'Male': 0, 'Female': 1},
+            'SeniorCitizen': {'No': 0, 'Yes': 1, '0': 0, '1': 1},
+            'Partner': {'No': 0, 'Yes': 1},
+            'Dependents': {'No': 0, 'Yes': 1},
+            'PhoneService': {'No': 0, 'Yes': 1},
+            'MultipleLines': {'No': 0, 'Yes': 1, 'No phone service': 2},
+            'InternetService': {'DSL': 0, 'Fiber optic': 1, 'No': 2},
+            'OnlineSecurity': {'No': 0, 'Yes': 1, 'No internet service': 2},
+            'OnlineBackup': {'No': 0, 'Yes': 1, 'No internet service': 2},
+            'DeviceProtection': {'No': 0, 'Yes': 1, 'No internet service': 2},
+            'TechSupport': {'No': 0, 'Yes': 1, 'No internet service': 2},
+            'StreamingTV': {'No': 0, 'Yes': 1, 'No internet service': 2},
+            'StreamingMovies': {'No': 0, 'Yes': 1, 'No internet service': 2},
+            'Contract': {'Month-to-month': 0, 'One year': 1, 'Two year': 2},
+            'PaperlessBilling': {'No': 0, 'Yes': 1},
+            'PaymentMethod': {
+                'Electronic check': 0, 
+                'Mailed check': 1, 
+                'Bank transfer (automatic)': 2, 
+                'Credit card (automatic)': 3
+            },
+        }
+        
         # Encode categorical features using the loaded label encoders
         if label_encoders:
             print(f'[predict] Encoding categorical features using label encoders...')
@@ -317,43 +342,23 @@ def predict():
                         print(f'  [FALLBACK] Used default value: {le.classes_[0]}')
         else:
             print(f'[predict] WARNING: Label encoders not loaded, using hardcoded mappings as fallback')
-            # Categorical mappings for string-to-numeric conversion (fallback only)
-            categorical_mappings = {
-                'gender': {'Male': 0, 'Female': 1},
-                'Partner': {'No': 0, 'Yes': 1},
-                'Dependents': {'No': 0, 'Yes': 1},
-                'PhoneService': {'No': 0, 'Yes': 1},
-                'MultipleLines': {'No': 0, 'Yes': 1, 'No phone service': 2},
-                'InternetService': {'DSL': 0, 'Fiber optic': 1, 'No': 2},
-                'OnlineSecurity': {'No': 0, 'Yes': 1, 'No internet service': 2},
-                'OnlineBackup': {'No': 0, 'Yes': 1, 'No internet service': 2},
-                'DeviceProtection': {'No': 0, 'Yes': 1, 'No internet service': 2},
-                'TechSupport': {'No': 0, 'Yes': 1, 'No internet service': 2},
-                'StreamingTV': {'No': 0, 'Yes': 1, 'No internet service': 2},
-                'StreamingMovies': {'No': 0, 'Yes': 1, 'No internet service': 2},
-                'Contract': {'Month-to-month': 0, 'One year': 1, 'Two year': 2},
-                'PaperlessBilling': {'No': 0, 'Yes': 1},
-                'PaymentMethod': {
-                    'Electronic check': 0, 
-                    'Mailed check': 1, 
-                    'Bank transfer (automatic)': 2, 
-                    'Credit card (automatic)': 3
-                },
-            }
-            
-            # Convert categorical string values to numeric
-            for key in df_input.columns:
-                if key in categorical_mappings and isinstance(df_input[key].iloc[0], str):
-                    mapping = categorical_mappings[key]
-                    df_input[key] = df_input[key].map(mapping)
         
-        # Define expected columns (matching training data order)
+        # Apply fallback mappings to any remaining string columns not encoded by label_encoders
+        print(f'[predict] Applying fallback categorical mappings to any remaining string columns...')
+        for key in df_input.columns:
+            if key in categorical_mappings and isinstance(df_input[key].iloc[0], str):
+                mapping = categorical_mappings[key]
+                df_input[key] = df_input[key].map(mapping)
+                print(f'  ✓ Applied fallback mapping for {key}: {data[key]} → {df_input[key].iloc[0]}')
+        
+        # Define expected columns (matching training data order - MUST match clean_dataset.csv)
+        # Order from training: gender,SeniorCitizen,Partner,Dependents,tenure,PhoneService,MultipleLines,InternetService,OnlineSecurity,OnlineBackup,DeviceProtection,TechSupport,StreamingTV,StreamingMovies,Contract,PaperlessBilling,PaymentMethod,MonthlyCharges,TotalCharges
         expected_columns = [
-            'gender', 'Partner', 'Dependents', 'tenure', 'PhoneService',
+            'gender', 'SeniorCitizen', 'Partner', 'Dependents', 'tenure', 'PhoneService',
             'MultipleLines', 'InternetService', 'OnlineSecurity', 'OnlineBackup',
             'DeviceProtection', 'TechSupport', 'StreamingTV', 'StreamingMovies',
             'Contract', 'PaperlessBilling', 'PaymentMethod', 'MonthlyCharges',
-            'TotalCharges', 'SeniorCitizen'
+            'TotalCharges'
         ]
         
         # Reorder and fill missing columns with 0
@@ -364,8 +369,17 @@ def predict():
         # Select only expected columns in correct order
         df_input = df_input[expected_columns]
         
+        # Check for NaN values after encoding
+        nan_columns = df_input.columns[df_input.isna().any()].tolist()
+        if nan_columns:
+            print(f'[predict] WARNING: NaN values found in columns: {nan_columns}')
+            print(f'[predict] Data before fillna: {df_input.values}')
+            df_input = df_input.fillna(0)  # Fill NaN with 0
+            print(f'[predict] Data after fillna: {df_input.values}')
+        
         # Ensure all columns are numeric
         df_input = df_input.astype(float)
+        print(f'[predict] Data before scaling: {df_input.values[0]}')
         
         # Scale ALL numeric features using scaler (must match training pipeline)
         if scaler is not None:
@@ -377,16 +391,21 @@ def predict():
                 # Transform with proper feature names
                 scaled_data = scaler.transform(df_input[expected_columns].values)
                 df_input = pd.DataFrame(scaled_data, columns=scaler_features)
+                print(f'[predict] Scaled data: {df_input.values[0]}')
                 print(f'[predict] Scaled data shape: {df_input.shape}, columns: {list(df_input.columns)}')
             except Exception as scale_error:
                 print(f'[predict] Scaler warning (continuing): {scale_error}')
+        else:
+            print(f'[predict] WARNING: Scaler not loaded, using raw feature values')
         
         # Use DataFrame directly for prediction to preserve feature names
         # This prevents sklearn warnings about missing feature names
         try:
             # Predict using DataFrame (sklearn 1.3+ supports this)
+            print(f'[predict] Input features for prediction: {df_input.columns.tolist()}')
             prob_predictions = model.predict_proba(df_input)
             churn_prob = float(prob_predictions[0][1])  # Probability of churn (class 1)
+            print(f'[predict] Raw prediction output: {prob_predictions}')
             print(f'[predict] Predicted churn probability: {churn_prob}')
         except Exception as pred_error:
             # Fallback to numpy array if DataFrame prediction fails
