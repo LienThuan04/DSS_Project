@@ -1,61 +1,378 @@
-# DSS Antigravity - Hệ Thống Hỗ Trợ Quyết Định Dự Đoán Churn Khách Hàng
+# DSS Antigravity - Hệ Thống Hỗ Trợ Quyết Định Churn Prediction
 
-Hệ thống dự đoán churn khách hàng sử dụng Machine Learning. Bao gồm:
-- **Backend**: NestJS API trên port 3001
-- **Frontend**: React UI trên port 3000  
-- **ML API**: Python Flask API trên port 5000
-- **Database**: MongoDB
+**Customer Churn Prediction System** sử dụng Machine Learning.
+
+Dự đoán những khách hàng có nguy cơ churn (rời khỏi dịch vụ) để có hành động giữ chân kịp thời.
+
+📊 **Tech Stack:**
+- **Frontend**: React + TypeScript + Tailwind CSS
+- **Backend**: NestJS + MongoDB
+- **ML**: Python (Decision Tree) + Flask
+- **Database**: MongoDB (Local hoặc Cloud Atlas)
 
 ---
 
-## ⚡ QUICK START - CHỈ 2 LỆNH DUY NHẤT
+## ⚡ QUICK START - CHỈ 2 LỆNH
 
-### 🎯 Lần Đầu Tiên: Chạy setup 1 lần
-
-Mở **PowerShell/Command Prompt** trong thư mục gốc dự án và chạy:
+### 🎯 Lần Đầu: Setup
 
 ```cmd
 setup.bat
 ```
 
-**Công việc tự động:**
-- ✅ Kiểm tra Node.js, Python
-- ✅ Detect pnpm/npm (dùng cái nào có sẵn)
-- ✅ Cài dependencies cho Backend (NestJS)
-- ✅ Cài dependencies cho Frontend (React)
-- ✅ Tạo Python virtual environment
-- ✅ Cài Python packages
-- ✅ Preprocess data
-- ✅ Train ML model
-- ✅ Tự động chạy `start-all.bat`
+⏱️ Mất ~10-20 phút (cài dependencies, train model, chạy toàn bộ)
 
-⏱️ **Mất khoảng 10-20 phút lần đầu** (tuỳ vào tốc độ internet)
-
----
-
-### 🚀 Lần Sau: Chỉ cần chạy start-all.bat
-
-Mở **PowerShell/Command Prompt** và chạy:
+### 🚀 Lần Sau: Chạy
 
 ```cmd
 start-all.bat
 ```
 
-**Công việc:**
-- ✅ Khởi chạy Backend (NestJS) trên port 3001
-- ✅ Khởi chạy Frontend (React) trên port 3000
-- ✅ Khởi chạy ML API (Python) trên port 5000
-
-⏱️ **Mất khoảng 30-60 giây**
+⏱️ Mất ~2-3 phút
 
 ---
 
-## 📱 Truy Cập Ứng Dụng
+## 📱 Truy Cập
 
-Sau khi chạy, truy cập:
-- **Frontend**: http://localhost:3000
-- **Backend API**: http://localhost:3001/api
-- **ML API**: http://localhost:5000
+Sau khi khởi động, mở browser:
+- **Frontend**: http://localhost:3000 ← **Vào đây**
+- Backend API: http://localhost:3001/api
+- ML API: http://localhost:5000
+
+---
+
+## ✨ CẬP NHẬT MỚI (Version Latest)
+
+### 🌳 ML Model
+- ✅ **Decision Tree only** (tối ưu hóa, nhanh hơn)
+- ❌ Loại bỏ Logistic Regression & Random Forest
+
+### 📋 Frontend - Predictions Page
+- ✨ **Quick Form** (8 essential fields) - form đơn giản
+- 📝 **Full Form** (19 fields) - form đầy đủ
+- 🔘 **Toggle button** để chọn giữa hai form
+- 👤 **Customer ID display** - hiển thị ID khách hàng
+- 🔄 **Delete without modal** - delete dự đoán mà không hiện chi tiết
+
+### 🔧 Backend
+- ✅ Tích hợp Decision Tree model
+- ✅ Cải thiện recommendation logic
+- ✅ Optimized predictions
+
+---
+
+## 📋 YÊU CẦU HỆ THỐNG
+
+**Trước khi bắt đầu, cài đặt:**
+
+1. **Node.js** v14+ (https://nodejs.org/)
+2. **Python** 3.8+ (https://www.python.org/)
+3. **MongoDB** (Local hoặc Cloud Atlas - miễn phí)
+
+**Kiểm tra:**
+```cmd
+node --version
+npm --version
+python --version
+```
+
+---
+
+## 🗂️ CẤU TRÚC THƯ MỤC
+
+```
+DSS_Antigravity/
+├── setup.bat                              # Chạy lần đầu
+├── start-all.bat                          # Chạy lần sau
+├── README.md                              # File này
+│
+├── WA_Fn-UseC_-Telco-Customer-Churn.csv  # Data (bạn phải có)
+│
+├── frontend-react/                        # React UI (port 3000)
+│   ├── README.md                         # Frontend hướng dẫn
+│   ├── src/
+│   │   ├── components/
+│   │   │   ├── PredictionForm.tsx        # Full form
+│   │   │   └── SimplePredictionForm.tsx  # ✨ Quick form (NEW)
+│   │   └── pages/
+│   │       └── Predictions.tsx           # ✨ Form toggle (UPDATED)
+│   └── ...
+│
+├── backend-nestjs/                        # NestJS API (port 3001)
+│   ├── README.md                         # Backend hướng dẫn
+│   ├── src/
+│   │   ├── predictions/
+│   │   ├── customers/
+│   │   └── common/
+│   └── .env (tạo tự động)
+│
+├── ml-python/                             # Decision Tree + Flask (port 5000)
+│   ├── README.md                         # ML hướng dẫn ✨ UPDATED
+│   ├── train_model.py                    # ✨ Decision Tree only
+│   ├── predict_api.py                    # REST API
+│   ├── model.pkl                         # (auto-generated sau train)
+│   └── ...
+│
+└── docs/                                  # Documentation
+    └── ...
+```
+
+---
+
+## 🚀 CHI TIẾT TỪNG BƯỚC
+
+### BƯỚC 1: Chuẩn Bị Dữ Liệu
+
+Đảm bảo bạn có file: `WA_Fn-UseC_-Telco-Customer-Churn.csv`
+
+Đặt nó vào **thư mục gốc** (cùng với setup.bat)
+
+### BƯỚC 2: Setup (Lần Đầu)
+
+Mở **PowerShell** hoặc **CMD**, điều hướng vào thư mục gốc, chạy:
+
+```cmd
+setup.bat
+```
+
+Nó sẽ **tự động:**
+- ✅ Kiểm tra Node.js, Python
+- ✅ Cài Backend dependencies
+- ✅ Cài Frontend dependencies
+- ✅ Tạo Python venv
+- ✅ Cài ML dependencies
+- ✅ Chạy data preprocessing
+- ✅ ✨ Train Decision Tree model
+- ✅ Tự động chạy start-all.bat
+
+### BƯỚC 3: Start Application (Lần Sau)
+
+Chỉ cần:
+
+```cmd
+start-all.bat
+```
+
+Sẽ mở 3 cửa sổ terminal:
+- Backend (port 3001)
+- Frontend (port 3000)
+- ML API (port 5000)
+
+### BƯỚC 4: Truy Cập
+
+Mở browser:
+```
+http://localhost:3000
+```
+
+Thế là xong! 🎉
+
+---
+
+## 🔧 CẤU HÌNH ENVIRONMENT (Tùy Chọn)
+
+Nếu `setup.bat` không tạo `.env`, tạo thủ công:
+
+### Backend: `backend-nestjs/.env`
+```env
+MONGODB_URI=mongodb://localhost:27017/DSS2
+# hoặc MongoDB Cloud:
+# MONGODB_URI=mongodb+srv://user:pass@cluster.mongodb.net/DSS2?retryWrites=true&w=majority
+
+PORT=3001
+NODE_ENV=development
+ML_API_URL=http://localhost:5000
+```
+
+### Frontend: `frontend-react/.env.local`
+```env
+REACT_APP_API_URL=http://localhost:3001/api
+```
+
+---
+
+## 📊 TÍNH NĂNG CHÍNH
+
+### 🏠 Dashboard
+- Tổng quan số khách hàng
+- Thống kê churn rate
+- Biểu đồ phân tích
+
+### 👥 Customers
+- Danh sách khách hàng
+- Import CSV mới
+- Dự đoán churn
+
+### 🔮 Predictions ✨ **MỚI**
+- **Quick Form**: 8 fields, nhập nhanh
+- **Full Form**: 19 fields, chi tiết
+- **Toggle**: Chọn form theo nhu cầu
+- **Customer ID**: Hiển thị chi tiết khách hàng
+- **Delete**: Xóa không hiện modal
+
+### 🎯 What-If
+- Thay đổi thuộc tính
+- Xem churn probability thay đổi
+- So sánh kịch bản
+
+---
+
+## 🌳 MODEL: Decision Tree ✨
+
+**Why Decision Tree?**
+- ✅ Nhanh (real-time prediction)
+- ✅ Dễ giải thích (feature importance)
+- ✅ Không cần retrain thường xuyên
+- ✅ Hiệu năng tốt
+
+**Hiệu Năng:**
+- Test Accuracy: ~82%
+- F1 Score: ~78%
+- Cross-validation: Ổn định
+
+---
+
+## 🧪 KIỂM TRA HOẠT ĐỘNG
+
+### Frontend
+```
+http://localhost:3000
+```
+Nên thấy Dashboard
+
+### Backend
+```
+http://localhost:3001/api
+```
+Nên thấy JSON response
+
+### ML API
+```
+http://localhost:5000/health
+```
+Nên thấy health check
+
+---
+
+## ❌ CÓ VẤN ĐỀ?
+
+### "Node.js is not installed"
+→ Tải từ https://nodejs.org/
+
+### "Python is not installed"
+→ Tải từ https://www.python.org/ (chọn "Add Python to PATH")
+
+### "Cannot connect to MongoDB"
+→ Kiểm tra:
+- MongoDB service chạy chưa?
+- MONGODB_URI trong .env đúng không?
+- IP whitelist (nếu MongoDB Cloud)?
+
+### "Port already in use"
+→ Thay đổi port trong `.env`
+
+### "ML API not found"
+→ Chạy: `python ml-python/predict_api.py`
+
+---
+
+## 🔀 CHẠY TỪNG SERVICE RIÊNG (Advanced)
+
+### Backend Only
+```bash
+cd backend-nestjs
+npm run start:dev
+```
+
+### Frontend Only
+```bash
+cd frontend-react
+npm start
+```
+
+### ML API Only
+```bash
+cd ml-python
+python predict_api.py
+```
+
+⚠️ **Lưu ý:** Frontend cần Backend + ML API để hoạt động đầy đủ
+
+---
+
+## 📁 TỪNG THÀNH PHẦN
+
+### Frontend (React) - [chi tiết](frontend-react/README.md)
+- Giao diện người dùng
+- **Quick/Full Form toggle** ✨
+- Real-time predictions
+- Chart visualizations
+
+### Backend (NestJS) - [chi tiết](backend-nestjs/README.md)
+- REST API
+- MongoDB integration
+- ML API integration
+- Business logic
+
+### ML (Python) - [chi tiết](ml-python/README.md)
+- ✨ **Decision Tree classifier**
+- Feature engineering
+- Model training & evaluation
+- Flask REST API
+
+---
+
+## 🎓 ĐỐI VỚI NHẬP CSV
+
+Sau khi app chạy, có thể import CSV tại trang **Customers**:
+
+1. Mở http://localhost:3000/customers
+2. Click **"Import CSV"**
+3. Chọn file CSV có khách hàng
+4. Click Import
+
+Dữ liệu sẽ được lưu vào MongoDB.
+
+---
+
+## 📝 GHI CHÚ
+
+- **Lần chạy đầu**: ~10-20 phút (setup + training)
+- **Lần chạy tiếp theo**: ~2-3 phút
+- **Model sẽ retrain** khi bạn import CSV mới
+- **Không cần cài Docker/Kubernetes** - chạy native
+
+---
+
+## 🔗 RESOURCES
+
+- [Frontend README](frontend-react/README.md) - Details về React app
+- [Backend README](backend-nestjs/README.md) - Details về NestJS API
+- [ML README](ml-python/README.md) - Details về Decision Tree model
+- [API Documentation](docs/API.md) - Chi tiết API endpoints
+- [Recommendation Rules](docs/recommendation-rules.md) - Business rules
+
+---
+
+## 📞 SUPPORT
+
+Nếu gặp lỗi:
+1. Kiểm tra logs trong terminal
+2. Đọc chi tiết trong từng README (frontend, backend, ml-python)
+3. Đảm bảo Node.js, Python, MongoDB cài đặt đúng
+
+---
+
+## 🎉 READY TO GO!
+
+```cmd
+setup.bat          # Lần đầu (10-20 phút)
+start-all.bat      # Lần sau (2-3 phút)
+```
+
+Truy cập: http://localhost:3000
+
+**Happy Predicting! 🚀**
 
 ---
 

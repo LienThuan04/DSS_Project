@@ -1,88 +1,168 @@
-# Frontend (React + TypeScript + Tailwind CSS + shadcn/ui)
+# Frontend - Giao Diện React + TypeScript + Tailwind CSS
 
-Modern React frontend for Customer Churn Decision Support System using Tailwind CSS and shadcn/ui for lightweight, accessible UI.
+Giao diện người dùng hiện đại cho **Hệ Thống Hỗ Trợ Quyết Định Churn Khách Hàng**.
 
-## Project Structure
+Xây dựng với:
+- ⚛️ React 18+ kèm TypeScript
+- 🎨 Tailwind CSS để tạo style
+- 📊 Recharts để vẽ biểu đồ
+- 🔗 Axios để gọi API
+
+---
+
+## 📋 Cấu Trúc Thư Mục
 
 ```
 src/
-  ├── main.ts                    # Entry point
-  ├── App.tsx                    # Main App component with routing
-  ├── index.css                  # Tailwind CSS styles
+  ├── App.tsx                     # Ứng dụng chính
+  ├── index.tsx                   # Điểm vào
+  ├── index.css                   # Tailwind CSS
   ├── components/
-  │   └── Layout.tsx            # Main layout with sidebar
+  │   ├── Layout.tsx              # Layout giao diện
+  │   ├── PredictionForm.tsx       # Form dự đoán đầy đủ (19 trường)
+  │   ├── SimplePredictionForm.tsx # Form dự đoán nhanh (8 trường) ✨ MỚI
+  │   ├── PredictionResultCard.tsx # Hiển thị kết quả + ID ✨ CẬP NHẬT
+  │   ├── PredictionModal.tsx      # Cửa sổ xem chi tiết
+  │   ├── ChurnByContractChart.tsx # Biểu đồ churn theo hợp đồng
+  │   └── ...
   ├── pages/
-  │   ├── Dashboard.tsx         # Dashboard with charts
-  │   ├── Customers.tsx         # Customer list & management
-  │   └── Predictions.tsx       # Prediction list & form
+  │   ├── Dashboard.tsx           # Bảng điều khiển
+  │   ├── Customers.tsx           # Quản lý khách hàng
+  │   ├── Predictions.tsx         # Dự đoán ✨ CẬP NHẬT (toggle form)
+  │   └── WhatIfSimulation.tsx    # Phân tích kịch bản
   ├── services/
-  │   └── api.ts               # API client & endpoints
+  │   └── api.ts                  # Kết nối API
   └── types/
-      └── index.ts             # TypeScript type definitions
+      └── index.ts                # Kiểu dữ liệu TypeScript
 ```
 
-## Quick Start
+---
 
-### 1. Install Dependencies (with pnpm)
+## 🚀 Cách Chạy
+
+### 1. Cài Đặt Dependencies
 
 ```bash
 cd frontend-react
+npm install
+# hoặc
 pnpm install
 ```
 
-### 2. Environment Setup
+### 2. Cấu Hình Biến Môi Trường
 
-Create `.env` file (already included):
+Tạo file `.env.local`:
 
+```env
+REACT_APP_API_URL=http://localhost:3001/api
 ```
-REACT_APP_API_URL=http://localhost:3000
-```
 
-### 3. Development Server
+### 3. Chạy Server Phát Triển
 
 ```bash
+npm start
+# hoặc
 pnpm start
 ```
 
-Frontend runs on http://localhost:3000 (React dev server, backend on port 3000, so adjust if needed)
+Frontend chạy tại: **http://localhost:3000**
 
-### 4. Production Build
+### 4. Build Sản Xuất
 
 ```bash
+npm run build
+# hoặc
 pnpm build
 ```
 
-Outputs to `build/` directory for deployment.
+Output được tạo trong `build/` - có thể triển khai lên server.
 
-## Features
+---
 
-### 📊 Dashboard
-- Customer statistics (total, churn rate, high-risk count)
-- Churn distribution pie chart
-- Risk level distribution bar chart
-- Real-time metrics from backend
+## ✨ Tính Năng Chính
 
-### 👥 Customers Management
-- List all customers with pagination
-- Search customers by ID, gender, internet service
-- Create new customer
-- Delete customer
-- View customer details (tenure, charges, churn status)
+### 📊 Bảng Điều Khiển
+- Thống kê số khách hàng
+- Tỷ lệ churn
+- Biểu đồ phân tích
 
-### 🔮 Predictions
-- View all predictions with risk levels
-- Filter by risk level (HIGH, MEDIUM, LOW)
-- Make new prediction with form
-- View churn probability with visual progress bar
-- Recommendations for each prediction
-- Pagination support
+### 👥 Quản Lý Khách Hàng
+- Danh sách khách hàng (có phân trang)
+- Tìm kiếm khách hàng
+- Tạo / Xóa khách hàng
+- Xem chi tiết
 
-## Tech Stack
+### 🔮 Dự Đoán ✨ **CẬP NHẬT**
+- **Chuyển Đổi Form**: Chọn **Form Nhanh** (8 trường) hoặc **Form Đầy Đủ** (19 trường)
+- Form Nhanh: Nhập nhanh dữ liệu cơ bản
+- Form Đầy Đủ: Nhập chi tiết tất cả trường
+- Xem chi tiết dự đoán với **ID Khách Hàng** ✨
+- Lịch sử dự đoán có phân trang
+- Xóa dự đoán không hiện cửa sổ chi tiết ✨
 
-- **React 18** - UI Framework
-- **TypeScript** - Type safety
-- **React Router 6** - Client-side routing
-- **Tailwind CSS** - Utility-first CSS framework
+**Component Form:**
+- `PredictionForm.tsx` - Form đầy đủ
+- `SimplePredictionForm.tsx` - Form nhanh ✨ MỚI
+- Nút chuyển đổi để chọn
+
+### 🎯 Mô Phỏng What-If
+- Thay đổi thuộc tính khách hàng
+- Xem xác suất churn thay đổi
+- So sánh kịch bản khác nhau
+
+---
+
+## 🔌 Tích Hợp API
+
+Tất cả gọi API qua `src/services/api.ts`:
+
+```typescript
+export const predictionsApi = {
+  list: (page, limit, riskFilter) => {...},
+  create: (data) => {...},
+  stats: () => {...},
+  predictRaw: (customerData) => {...},
+  delete: (id) => {...}
+}
+```
+
+URL Backend từ: `process.env.REACT_APP_API_URL`
+
+---
+
+## 📦 Các Thư Viện Chính
+
+| Thư Viện | Mục Đích |
+|----------|---------|
+| **react** | Framework giao diện |
+| **react-router-dom** | Định tuyến trang |
+| **axios** | Gọi HTTP API |
+| **recharts** | Vẽ biểu đồ |
+| **tailwindcss** | Tạo style |
+| **lucide-react** | Icon |
+| **typescript** | Kiểm tra kiểu |
+
+---
+
+## 🧪 Mẹo Phát Triển
+
+**Tự động tải lại:** Sửa mã → Browser tự cập nhật (nhờ Dev Server)
+
+**Debug API:** Mở DevTools (F12) → Tab Network → xem gọi API
+
+**Tạo Component:** Tạo file trong `src/components/` → nhập vào pages
+
+---
+
+## 🔗 Liên Kết
+
+- **Backend**: http://localhost:3001/api
+- **ML API**: http://localhost:5000
+- **Phát Triển**: http://localhost:3000
+
+---
+
+**Xây dựng bằng ❤️ sử dụng React**
 - **Recharts** - Data visualization library
 - **Axios** - HTTP client
 - **Lucide React** - Icon library
