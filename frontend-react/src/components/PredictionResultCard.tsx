@@ -19,12 +19,14 @@ interface Prediction {
 interface PredictionResultCardProps {
   prediction: Prediction;
   customerName?: string;
+  customerId?: string;
   onClose?: () => void;
 }
 
 const PredictionResultCard: React.FC<PredictionResultCardProps> = ({
   prediction,
   customerName,
+  customerId,
   onClose,
 }) => {
   const getRiskColor = (level: string) => {
@@ -75,10 +77,16 @@ const PredictionResultCard: React.FC<PredictionResultCardProps> = ({
       <div className="bg-gradient-to-r from-blue-600 to-blue-700 px-6 py-4">
         <div className="flex justify-between items-start">
           <div>
-            <h3 className="text-xl font-bold text-white">Prediction Result</h3>
-            {customerName && <p className="text-blue-100 text-sm mt-1">{customerName}</p>}
+            <h3 className="text-xl font-bold text-white">Prediction Result of {customerName || 'Customer'}</h3>
+            {(customerName || customerId) && (
+              <p className="text-blue-100 text-sm mt-1">
+                {customerId && <span>ID: {customerId}</span>}
+                {customerId && customerName && <span> • </span>}
+                {customerName && <span>{customerName}</span>}
+              </p>
+            )}
           </div>
-          {onClose && (
+          {/* {onClose && (
             <button
               onClick={onClose}
               className="text-white hover:text-blue-100 transition"
@@ -88,7 +96,7 @@ const PredictionResultCard: React.FC<PredictionResultCardProps> = ({
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
               </svg>
             </button>
-          )}
+          )} */}
         </div>
       </div>
 
@@ -192,9 +200,9 @@ const PredictionResultCard: React.FC<PredictionResultCardProps> = ({
             Close
           </button>
         )}
-        <button className="flex-1 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-md transition">
+        {/* <button className="flex-1 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-md transition">
           View Details
-        </button>
+        </button> */}
       </div>
     </div>
   );

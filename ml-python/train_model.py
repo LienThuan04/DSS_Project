@@ -11,9 +11,7 @@ import pandas as pd
 import numpy as np
 from sklearn.model_selection import train_test_split, cross_val_score
 from sklearn.preprocessing import StandardScaler
-from sklearn.linear_model import LogisticRegression
 from sklearn.tree import DecisionTreeClassifier
-from sklearn.ensemble import RandomForestClassifier
 from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score, confusion_matrix, roc_auc_score
 from sklearn.model_selection import KFold
 import joblib
@@ -103,21 +101,9 @@ def analyze_class_balance(y):
         print("✓ Class balance is acceptable (ratio < 3)")
         return False
 
-def train_logistic_regression(X_train, y_train, use_balanced_weights=False):
-    """Train Logistic Regression model."""
-    print("\n[1] Training Logistic Regression...")
-    model = LogisticRegression(
-        max_iter=1000, 
-        random_state=42,
-        class_weight='balanced' if use_balanced_weights else None
-    )
-    model.fit(X_train, y_train)
-    print("✓ Logistic Regression trained")
-    return model
-
 def train_decision_tree(X_train, y_train, use_balanced_weights=False):
     """Train Decision Tree model."""
-    print("\n[2] Training Decision Tree...")
+    print("\nTraining Decision Tree...")
     model = DecisionTreeClassifier(
         max_depth=10, 
         random_state=42,
@@ -125,20 +111,6 @@ def train_decision_tree(X_train, y_train, use_balanced_weights=False):
     )
     model.fit(X_train, y_train)
     print("✓ Decision Tree trained")
-    return model
-
-def train_random_forest(X_train, y_train, use_balanced_weights=False):
-    """Train Random Forest model."""
-    print("\n[3] Training Random Forest...")
-    model = RandomForestClassifier(
-        n_estimators=100, 
-        max_depth=10, 
-        random_state=42,
-        n_jobs=-1,
-        class_weight='balanced' if use_balanced_weights else None
-    )
-    model.fit(X_train, y_train)
-    print("✓ Random Forest trained")
     return model
 
 def evaluate_model(model, X_train, X_test, y_train, y_test, model_name):
@@ -357,33 +329,24 @@ def main():
     # Split data
     X_train, X_test, y_train, y_test = split_data(X_scaled, y)
     
-    # Train all models
-    print("\n===== Training Models =====")
-    lr_model = train_logistic_regression(X_train, y_train, use_balanced_weights)
+    # Train model
+    print("\n===== Training Model =====")
     dt_model = train_decision_tree(X_train, y_train, use_balanced_weights)
-    rf_model = train_random_forest(X_train, y_train, use_balanced_weights)
     
-    # Evaluate all models
+    # Evaluate model
     print("\n===== Model Evaluation =====")
     results = []
-    results.append(evaluate_model(lr_model, X_train, X_test, y_train, y_test, "Logistic Regression"))
     results.append(evaluate_model(dt_model, X_train, X_test, y_train, y_test, "Decision Tree"))
-    results.append(evaluate_model(rf_model, X_train, X_test, y_train, y_test, "Random Forest"))
     
     # Feature importance
     print("\n===== Feature Importance =====")
     feature_importance(dt_model, X_train, "Decision Tree")
-    feature_importance(rf_model, X_train, "Random Forest")
     
-    # Export model comparison
-    print("\n===== Model Comparison Export =====")
-    export_model_comparison(results)
+    # Select best model (only Decision Tree)
+    best_result = results[0]
+    print(f"\n===== Selected Model: {best_result['name']} (F1: {best_result['f1']:.4f}) =====")
     
-    # Select best model based on F1 score
-    best_result = max(results, key=lambda x: x['f1'])
-    print(f"\n===== Best Model: {best_result['name']} (F1: {best_result['f1']:.4f}) =====")
-    
-    # Perform detailed cross-validation on best model
+    # Perform detailed cross-validation on Decision Tree
     cv_stats = perform_detailed_cross_validation(best_result['model'], X_train, y_train, best_result['name'])
     export_cv_results(cv_stats)
     

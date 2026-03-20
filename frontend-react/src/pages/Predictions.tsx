@@ -128,7 +128,12 @@ const Predictions: React.FC = () => {
             <PredictionForm onSubmit={handleFormSubmit} />
           ) : result ? (
             <div className="space-y-4">
-              <PredictionResultCard prediction={result} onClose={handleNewPrediction} />
+              <PredictionResultCard 
+                prediction={result} 
+                customerName={result.customerName}
+                customerId={result.customerId}
+                onClose={handleNewPrediction} 
+              />
               <button
                 onClick={handleNewPrediction}
                 className="w-full px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-md transition"
@@ -307,6 +312,8 @@ const Predictions: React.FC = () => {
             <div className="p-6">
               <PredictionResultCard
                 prediction={selectedPrediction as any}
+                customerName={selectedPrediction.customerName}
+                customerId={selectedPrediction.customerId}
                 onClose={() => setSelectedPrediction(null)}
               />
             </div>
