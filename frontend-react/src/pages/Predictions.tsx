@@ -3,6 +3,7 @@ import { AlertCircle, Loader } from 'lucide-react';
 import { predictionsApi } from '../services/api';
 import { Prediction, Stats } from '../types';
 import PredictionForm from '../components/PredictionForm';
+import SimplePredictionForm from '../components/SimplePredictionForm';
 import PredictionResultCard from '../components/PredictionResultCard';
 
 const Predictions: React.FC = () => {
@@ -16,6 +17,7 @@ const Predictions: React.FC = () => {
   const [showForm, setShowForm] = useState(true);
   const [result, setResult] = useState<any>(null);
   const [selectedPrediction, setSelectedPrediction] = useState<Prediction | null>(null);
+  const [formType, setFormType] = useState<'simple' | 'full'>('simple');
 
   const fetchPredictions = async () => {
     try {
@@ -125,7 +127,41 @@ const Predictions: React.FC = () => {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2">
           {showForm ? (
-            <PredictionForm onSubmit={handleFormSubmit} />
+            <>
+              {/* Form Type Toggle */}
+              <div className="mb-4 bg-white rounded-lg shadow-md p-4">
+                <p className="text-sm font-medium text-gray-700 mb-3">Select Form Type:</p>
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => setFormType('simple')}
+                    className={`flex-1 px-4 py-2 rounded-md font-medium transition ${
+                      formType === 'simple'
+                        ? 'bg-blue-600 text-white'
+                        : 'bg-gray-200 text-gray-800 hover:bg-gray-300'
+                    }`}
+                  >
+                    Quick Form
+                  </button>
+                  <button
+                    onClick={() => setFormType('full')}
+                    className={`flex-1 px-4 py-2 rounded-md font-medium transition ${
+                      formType === 'full'
+                        ? 'bg-blue-600 text-white'
+                        : 'bg-gray-200 text-gray-800 hover:bg-gray-300'
+                    }`}
+                  >
+                    Full Form
+                  </button>
+                </div>
+              </div>
+              
+              {/* Render Selected Form */}
+              {formType === 'simple' ? (
+                <SimplePredictionForm onSubmit={handleFormSubmit} />
+              ) : (
+                <PredictionForm onSubmit={handleFormSubmit} />
+              )}
+            </>
           ) : result ? (
             <div className="space-y-4">
               <PredictionResultCard 
@@ -235,7 +271,11 @@ const Predictions: React.FC = () => {
               </thead>
               <tbody>
                 {predictions.map((pred) => (
-                  <tr key={pred.id || pred._id} className="border-b border-gray-200 hover:bg-gray-50">
+                  <tr 
+                    key={pred.id || pred._id} 
+                    onClick={() => setSelectedPrediction(pred)}
+                    className="border-b border-gray-200 hover:bg-gray-50 cursor-pointer"
+                  >
                     <td className="px-6 py-4 text-sm text-gray-900 truncate max-w-xs">{pred.id || pred._id || '-'}</td>
                     <td className="px-6 py-4 text-sm">
                       <span className={`px-2 py-1 rounded text-xs font-semibold ${getRiskColor(pred.riskLevel || 'MEDIUM')}`}>
@@ -252,7 +292,8 @@ const Predictions: React.FC = () => {
                     </td>
                     <td className="px-6 py-4 text-right">
                       <button
-                        onClick={() => {
+                        onClick={(e) => {
+                          e.stopPropagation();
                           const id = pred.id || pred._id;
                           if (id) {
                             handleDeletePrediction(id);
