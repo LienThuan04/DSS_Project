@@ -59,7 +59,7 @@ const Customers: React.FC = () => {
       
       // Apply churn filter
       if (churnFilter !== 'all') {
-        filteredData = filteredData.filter(c => {
+        filteredData = filteredData.filter((c: Customer) => {
           if (churnFilter === 'yes') return c.Churn === 'Yes';
           if (churnFilter === 'no') return c.Churn === 'No';
           return true;
