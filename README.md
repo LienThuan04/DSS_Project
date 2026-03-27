@@ -1,4 +1,4 @@
-# DSS Antigravity - Hệ Thống Hỗ Trợ Quyết Định Churn Prediction
+# DSS Project - Hệ Thống Hỗ Trợ Quyết Định Churn Prediction
 
 **Customer Churn Prediction System** sử dụng Machine Learning.
 
