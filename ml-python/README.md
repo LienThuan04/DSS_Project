@@ -2,7 +2,9 @@
 
 Mô hình Máy Học dự đoán churn khách hàng sử dụng **Cây Quyết Định** (scikit-learn) + API REST Flask.
 
-✨ **CẬP NHẬT MỚI:** Giờ chỉ dùng **Cây Quyết Định** duy nhất (tối ưu hóa)
+✨ **CẬP NHẬT MỚI:** 
+- Giờ chỉ dùng **Cây Quyết Định** duy nhất (tối ưu hóa)
+- 🔥 **FIX DATA LEAKAGE:** Scaler được fit chỉ trên train set, transform riêng cho test set (tránh rò rỉ thông tin)
 
 Xây dựng với:
 - 🌳 Scikit-learn (Mô hình Cây Quyết Định)
@@ -107,6 +109,12 @@ python train_model.py
 - Xác thực chéo 5 lần
 - Lưu mô hình: `model.pkl`
 - Lưu bộ chia tỷ lệ: `scaler.pkl`
+
+**✨ FIX DATA LEAKAGE (Mới):**
+- ✅ Split data **TRƯỚC** feature engineering
+- ✅ Fit StandardScaler **CHỈ TRÊN TRAIN SET**
+- ✅ Transform test set dùng scaler đã fit từ train set
+- ✅ Tránh rò rỉ thông tin từ test set vào quá trình huấn luyện
 
 Đầu ra:
 ```
@@ -236,7 +244,14 @@ data_preprocessing.py (làm sạch, mã hóa)
     ↓
 clean_dataset.csv
     ↓
-train_model.py (phân loại Cây Quyết Định)
+SPLIT TRAIN/TEST (80/20) ← ✅ FIX: Bước này TRƯỚC feature engineering
+    ↓
+train_model.py:
+  ├─ Fit StandardScaler trên TRAIN SET ← ✅ FIX: Chỉ fit trên train
+  ├─ Transform TRAIN SET
+  ├─ Transform TEST SET (dùng scaler từ train) ← ✅ FIX: Tránh data leakage
+  ├─ Huấn luyện Cây Quyết Định
+  └─ Đánh giá mô hình
     ↓
 model.pkl + scaler.pkl
     ↓
@@ -249,15 +264,19 @@ Trả về: {churnProbability, riskLevel, topFactors}
 ### Quy Trình Chấm Điểm
 
 1. **Xác Thực Đầu Vào**: Kiểm tra dữ liệu hợp lệ
-2. **Kỹ Thuật Tính Năng**: Mã hóa tính năng phân loại
-3. **Chia Tỷ Lệ**: StandardScaler (dự đoán phải sử dụng bộ chia tỷ lệ giống nhau như huấn luyện)
-4. **Dự Đoán**: Bộ phân loại Cây Quyết Định dự đoán
-5. **Phân Loại Rủi Ro**:
+2. **✅ Split Dữ Liệu**: Chia train/test (80/20) với stratify để tránh data leakage
+3. **Kỹ Thuật Tính Năng**: Mã hóa tính năng phân loại
+4. **✅ Chia Tỷ Lệ (FIX)**: 
+   - Fit StandardScaler **CHỈ TRÊN TRAIN SET**
+   - Transform test set dùng scaler từ train
+   - (Cũ: fit trên tất cả dữ liệu → rò rỉ test vào training)
+5. **Dự Đoán**: Bộ phân loại Cây Quyết Định dự đoán
+6. **Phân Loại Rủi Ro**:
    - Xác Suất Churn ≥ 0.70 → Rủi Ro CAO
    - 0.40 ≤ Prob < 0.70 → Rủi Ro TRUNG BÌNH
    - Prob < 0.40 → Rủi Ro THẤP
-6. **Tầm Quan Trọng Tính Năng**: Trích xuất các yếu tố hàng đầu
-7. **Khuyến Nghị**: Tạo khuyến nghị dựa trên mức rủi ro
+7. **Tầm Quan Trọng Tính Năng**: Trích xuất các yếu tố hàng đầu
+8. **Khuyến Nghị**: Tạo khuyến nghị dựa trên mức rủi ro
 
 ---
 
@@ -310,6 +329,54 @@ seaborn==0.12.2
 flask==3.0.0
 flask-cors==4.0.0
 ```
+
+---
+
+## 🔧 Cải Tiến & Sửa Lỗi
+
+### 🔥 Data Leakage Fix (Sửa Rò Rỉ Dữ Liệu)
+
+**Vấn Đề Cũ:**
+```python
+# ❌ SAI: Fit scaler trước khi split → thông tin test leak vào training
+X_scaled, scaler = feature_engineering(X)  # Fit on ALL data
+X_train, X_test, y_train, y_test = split_data(X_scaled, y)
+```
+
+**Giải Pháp (Mới):**
+```python
+# ✅ ĐÚNG: Split TRƯỚC, fit scaler chỉ trên TRAIN SET
+X_train, X_test, y_train, y_test = split_data(X, y)
+
+# Fit scaler CHỈ trên train set
+X_train_scaled, scaler = feature_engineering(X_train, scaler=None)
+
+# Transform test set dùng scaler từ train
+X_test_scaled, _ = feature_engineering(X_test, scaler=scaler)
+```
+
+**Tại Sao Điều Này Quan Trọng?**
+- **Trước:** Scaler fit trên toàn bộ dữ liệu (kể cả test set) → thống kê test rò rỉ → đánh giá mô hình không thực tế
+- **Sau:** Scaler fit chỉ trên train → transform test độc lập → đánh giá chính xác như thực tế
+
+**Chi Tiết Triển Khai:**
+
+1. **Hàm `split_data()`** - Được gọi **TRƯỚC** feature engineering
+   - Chia dữ liệu 80/20 (train/test)
+   - Sử dụng `stratify=y` để giữ tỷ lệ lớp
+
+2. **Hàm `feature_engineering(X, scaler=None)`** - Linh hoạt fit/transform
+   - Nếu `scaler=None`: Tạo StandardScaler mới và **fit_transform** (cho train set)
+   - Nếu `scaler` được truyền: Chỉ **transform** (cho test set)
+
+3. **CrossValidation** - Tránh leakage trong CV
+   - Scaler từ training set được sử dụng cho validation set trong mỗi fold
+   - Không có thông tin cross-leak giữa các fold
+
+**Tác Động:**
+- ✅ Đánh giá mô hình trở nên thực tế hơn
+- ✅ Không overestimate performance trên test set
+- ✅ Mô hình sẽ perform tốt hơn trên dữ liệu thực tế mới
 
 ---
 

@@ -71,8 +71,10 @@ def load_clean_data():
     return X, y
 
 
-def feature_engineering(X):
+def feature_engineering(X, scaler=None):
     # Hàm tiền xử lý/feature engineering (ở đây chỉ scale các biến số)
+    # Nếu scaler được truyền vào thì dùng để transform (cho test set)
+    # Nếu scaler=None thì khởi tạo mới và fit (cho train set)
     print("\n===== Feature Engineering =====")
     
     # Chọn các cột số nguyên/số thực (numeric)
@@ -80,15 +82,20 @@ def feature_engineering(X):
     # In một số cột numeric để kiểm tra
     print(f"Numeric features ({len(numeric_cols)}): {list(numeric_cols)[:10]}...")
     
-    # Khởi tạo StandardScaler để chuẩn hóa phân phối (mean=0, std=1)
-    scaler = StandardScaler()
     # Sao chép DataFrame để không thay đổi gốc
     X_scaled = X.copy()
-    # Áp scaler cho các cột numeric và gán lại
-    X_scaled[numeric_cols] = scaler.fit_transform(X[numeric_cols])
     
-    # Thông báo đã scale
-    print(f"✓ Scaled {len(numeric_cols)} numeric features")
+    # Nếu scaler chưa được khởi tạo thì tạo mới (và fit trên train set)
+    if scaler is None:
+        scaler = StandardScaler()
+        # ✓ FIX: fit_transform chỉ trên TRAIN set để tránh data leakage
+        X_scaled[numeric_cols] = scaler.fit_transform(X[numeric_cols])
+        print(f"✓ Scaler fitted and scaled {len(numeric_cols)} numeric features")
+    else:
+        # Nếu scaler đã được fit, chỉ transform (cho test set hoặc validation set)
+        X_scaled[numeric_cols] = scaler.transform(X[numeric_cols])
+        print(f"✓ Scaled {len(numeric_cols)} numeric features using fitted scaler")
+    
     # In kích thước của features sau scale
     print(f"Features shape: {X_scaled.shape}")
     
@@ -382,34 +389,38 @@ def main():
         # Nếu tải dữ liệu thất bại thì dừng chương trình
         return
     
-    # Tiền xử lý / scale
-    X_scaled, scaler = feature_engineering(X)
+    # Split data TRƯỚC feature engineering để tránh data leakage
+    X_train, X_test, y_train, y_test = split_data(X, y)
     
     # Kiểm tra imbalance để quyết định có dùng class_weight hay không
     use_balanced_weights = analyze_class_balance(y)
     
-    # Chia dữ liệu
-    X_train, X_test, y_train, y_test = split_data(X_scaled, y)
+    # ✓ FIX: Fit scaler chỉ trên TRAIN set
+    print("\n===== Scaling Features =====")
+    X_train_scaled, scaler = feature_engineering(X_train, scaler=None)
+    
+    # ✓ FIX: Transform TEST set dùng scaler đã fit từ train set
+    X_test_scaled, _ = feature_engineering(X_test, scaler=scaler)
     
     # Huấn luyện mô hình (ở đây chỉ dùng Decision Tree)
     print("\n===== Training Model =====")
-    dt_model = train_decision_tree(X_train, y_train, use_balanced_weights)
+    dt_model = train_decision_tree(X_train_scaled, y_train, use_balanced_weights)
     
     # Đánh giá mô hình
     print("\n===== Model Evaluation =====")
     results = []
-    results.append(evaluate_model(dt_model, X_train, X_test, y_train, y_test, "Decision Tree"))
+    results.append(evaluate_model(dt_model, X_train_scaled, X_test_scaled, y_train, y_test, "Decision Tree"))
     
     # In feature importance nếu có
     print("\n===== Feature Importance =====")
-    feature_importance(dt_model, X_train, "Decision Tree")
+    feature_importance(dt_model, X_train_scaled, "Decision Tree")
     
     # Chọn mô hình tốt nhất (hiện tại chỉ có 1 mô hình)
     best_result = results[0]
     print(f"\n===== Selected Model: {best_result['name']} (F1: {best_result['f1']:.4f}) =====")
     
     # Thực hiện detailed CV trên mô hình đã chọn và lưu kết quả
-    cv_stats = perform_detailed_cross_validation(best_result['model'], X_train, y_train, best_result['name'])
+    cv_stats = perform_detailed_cross_validation(best_result['model'], X_train_scaled, y_train, best_result['name'])
     export_cv_results(cv_stats)
     
     # Lưu mô hình và scaler
