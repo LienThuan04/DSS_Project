@@ -1,84 +1,81 @@
-import { IsString, IsNumber, IsOptional } from 'class-validator';
+import { IsString, IsNumber, IsOptional, IsIn } from 'class-validator';
 
 export class CreateCustomerDto {
   @IsString()
   customerID: string;
 
-  @IsOptional()
   @IsString()
-  gender?: string;
+  @IsIn(['Male', 'Female'])
+  gender: string;
 
-  @IsOptional()
   @IsNumber()
-  SeniorCitizen?: number;
+  @IsIn([0, 1])
+  SeniorCitizen: number;
 
-  @IsOptional()
   @IsString()
-  Partner?: string;
+  @IsIn(['Yes', 'No'])
+  Partner: string;
 
-  @IsOptional()
   @IsString()
-  Dependents?: string;
+  @IsIn(['Yes', 'No'])
+  Dependents: string;
 
-  @IsOptional()
   @IsNumber()
-  tenure?: number;
+  tenure: number;
 
-  @IsOptional()
   @IsString()
-  PhoneService?: string;
+  @IsIn(['Yes', 'No'])
+  PhoneService: string;
 
-  @IsOptional()
   @IsString()
-  MultipleLines?: string;
+  @IsIn(['Yes', 'No', 'No phone service'])
+  MultipleLines: string;
 
-  @IsOptional()
   @IsString()
-  InternetService?: string;
+  @IsIn(['DSL', 'Fiber optic', 'No'])
+  InternetService: string;
 
-  @IsOptional()
   @IsString()
-  OnlineSecurity?: string;
+  @IsIn(['Yes', 'No', 'No internet service'])
+  OnlineSecurity: string;
 
-  @IsOptional()
   @IsString()
-  OnlineBackup?: string;
+  @IsIn(['Yes', 'No', 'No internet service'])
+  OnlineBackup: string;
 
-  @IsOptional()
   @IsString()
-  DeviceProtection?: string;
+  @IsIn(['Yes', 'No', 'No internet service'])
+  DeviceProtection: string;
 
-  @IsOptional()
   @IsString()
-  TechSupport?: string;
+  @IsIn(['Yes', 'No', 'No internet service'])
+  TechSupport: string;
 
-  @IsOptional()
   @IsString()
-  StreamingTV?: string;
+  @IsIn(['Yes', 'No', 'No internet service'])
+  StreamingTV: string;
 
-  @IsOptional()
   @IsString()
-  StreamingMovies?: string;
+  @IsIn(['Yes', 'No', 'No internet service'])
+  StreamingMovies: string;
 
-  @IsOptional()
   @IsString()
-  Contract?: string;
+  @IsIn(['Month-to-month', 'One year', 'Two year'])
+  Contract: string;
 
-  @IsOptional()
   @IsString()
-  PaperlessBilling?: string;
+  @IsIn(['Yes', 'No'])
+  PaperlessBilling: string;
 
-  @IsOptional()
   @IsString()
-  PaymentMethod?: string;
+  @IsIn(['Electronic check', 'Mailed check', 'Bank transfer (automatic)', 'Credit card (automatic)'])
+  PaymentMethod: string;
 
-  @IsOptional()
   @IsNumber()
-  MonthlyCharges?: number;
+  MonthlyCharges: number;
 
-  @IsOptional()
   @IsNumber()
-  TotalCharges?: number;
+  TotalCharges: number;
 
   @IsOptional()
   @IsString()
