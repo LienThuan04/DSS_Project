@@ -1,0 +1,4 @@
+Model,Train Accuracy,Test Accuracy,Precision,Recall,F1 Score,AUC-ROC,CV Accuracy (Mean),CV Accuracy (Std)
+Logistic Regression,0.8035,0.7999,0.6438,0.5508,0.5937,0.8403,0.8039,0.0139
+Decision Tree,0.8585,0.7544,0.5376,0.5348,0.5362,0.7463,0.7602,0.0118
+Random Forest,0.8788,0.7956,0.6463,0.5080,0.5689,0.8416,0.7955,0.0118

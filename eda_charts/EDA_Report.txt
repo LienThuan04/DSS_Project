@@ -1,0 +1,147 @@
+============================================================
+EXPLORATORY DATA ANALYSIS (EDA) REPORT
+============================================================
+
+CHURN SUMMARY:
+  Total customers: 7043
+  Churned customers: 1869
+  Churn rate: 26.54%
+
+NUMERIC FEATURES SUMMARY:
+
+  gender:
+    Mean: 0.50
+    Median: 1.00
+    Std Dev: 0.50
+    Min: 0.00
+    Max: 1.00
+
+  SeniorCitizen:
+    Mean: 0.16
+    Median: 0.00
+    Std Dev: 0.37
+    Min: 0.00
+    Max: 1.00
+
+  Partner:
+    Mean: 0.48
+    Median: 0.00
+    Std Dev: 0.50
+    Min: 0.00
+    Max: 1.00
+
+  Dependents:
+    Mean: 0.30
+    Median: 0.00
+    Std Dev: 0.46
+    Min: 0.00
+    Max: 1.00
+
+  tenure:
+    Mean: 32.37
+    Median: 29.00
+    Std Dev: 24.56
+    Min: 0.00
+    Max: 72.00
+
+  PhoneService:
+    Mean: 0.90
+    Median: 1.00
+    Std Dev: 0.30
+    Min: 0.00
+    Max: 1.00
+
+  MultipleLines:
+    Mean: 0.94
+    Median: 1.00
+    Std Dev: 0.95
+    Min: 0.00
+    Max: 2.00
+
+  InternetService:
+    Mean: 0.87
+    Median: 1.00
+    Std Dev: 0.74
+    Min: 0.00
+    Max: 2.00
+
+  OnlineSecurity:
+    Mean: 0.29
+    Median: 0.00
+    Std Dev: 0.45
+    Min: 0.00
+    Max: 1.00
+
+  OnlineBackup:
+    Mean: 0.34
+    Median: 0.00
+    Std Dev: 0.48
+    Min: 0.00
+    Max: 1.00
+
+  DeviceProtection:
+    Mean: 0.34
+    Median: 0.00
+    Std Dev: 0.48
+    Min: 0.00
+    Max: 1.00
+
+  TechSupport:
+    Mean: 0.29
+    Median: 0.00
+    Std Dev: 0.45
+    Min: 0.00
+    Max: 1.00
+
+  StreamingTV:
+    Mean: 0.38
+    Median: 0.00
+    Std Dev: 0.49
+    Min: 0.00
+    Max: 1.00
+
+  StreamingMovies:
+    Mean: 0.39
+    Median: 0.00
+    Std Dev: 0.49
+    Min: 0.00
+    Max: 1.00
+
+  Contract:
+    Mean: 0.69
+    Median: 0.00
+    Std Dev: 0.83
+    Min: 0.00
+    Max: 2.00
+
+  PaperlessBilling:
+    Mean: 0.59
+    Median: 1.00
+    Std Dev: 0.49
+    Min: 0.00
+    Max: 1.00
+
+  PaymentMethod:
+    Mean: 1.57
+    Median: 2.00
+    Std Dev: 1.07
+    Min: 0.00
+    Max: 3.00
+
+  MonthlyCharges:
+    Mean: 64.76
+    Median: 70.35
+    Std Dev: 30.09
+    Min: 18.25
+    Max: 118.75
+
+  TotalCharges:
+    Mean: 2281.92
+    Median: 1397.47
+    Std Dev: 2265.27
+    Min: 18.80
+    Max: 8684.80
+
+============================================================
+END OF EDA REPORT
+============================================================

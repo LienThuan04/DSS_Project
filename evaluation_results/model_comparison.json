@@ -1,0 +1,44 @@
+{
+  "timestamp": "2026-03-18T08:14:25.544440",
+  "models": [
+    {
+      "name": "Logistic Regression",
+      "metrics": {
+        "train_accuracy": 0.8035143769968051,
+        "test_accuracy": 0.7998580553584103,
+        "precision": 0.64375,
+        "recall": 0.5508021390374331,
+        "f1_score": 0.5936599423631125,
+        "auc_roc": 0.8403239556692242,
+        "cv_accuracy_mean": 0.8038658725518163,
+        "cv_accuracy_std": 0.013948201881005144
+      }
+    },
+    {
+      "name": "Decision Tree",
+      "metrics": {
+        "train_accuracy": 0.8585374511892083,
+        "test_accuracy": 0.7544357700496807,
+        "precision": 0.5376344086021505,
+        "recall": 0.5347593582887701,
+        "f1_score": 0.5361930294906166,
+        "auc_roc": 0.7463406442946086,
+        "cv_accuracy_mean": 0.7602032148097482,
+        "cv_accuracy_std": 0.01183432722555982
+      }
+    },
+    {
+      "name": "Random Forest",
+      "metrics": {
+        "train_accuracy": 0.8787717429889954,
+        "test_accuracy": 0.7955997161107168,
+        "precision": 0.6462585034013606,
+        "recall": 0.5080213903743316,
+        "f1_score": 0.5688622754491018,
+        "auc_roc": 0.84158076933013,
+        "cv_accuracy_mean": 0.7955243569356076,
+        "cv_accuracy_std": 0.01175137780155277
+      }
+    }
+  ]
+}
