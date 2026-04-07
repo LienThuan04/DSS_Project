@@ -18,10 +18,14 @@ import ChurnByContractChart from '../components/ChurnByContractChart';
 import ChurnByInternetServiceChart from '../components/ChurnByInternetServiceChart';
 import ChurnByPaymentMethodChart from '../components/ChurnByPaymentMethodChart';
 
-const StatCard = ({ label, value, color = 'text-blue-600' }: any) => (
-  <div className="card">
-    <p className="text-sm font-medium text-gray-600">{label}</p>
-    <p className={`mt-2 text-3xl font-bold ${color}`}>{value}</p>
+const StatCard = ({ label, value, color = 'from-blue-500 to-cyan-500' }: any) => (
+  <div className="card bg-gradient-to-br from-white/90 to-blue-50/50 border-l-4 border-purple-500 group hover:shadow-lg">
+    <div className="flex items-center justify-between">
+      <div>
+        <p className="text-sm font-semibold text-slate-600 uppercase tracking-wide">{label}</p>
+        <p className={`mt-3 text-4xl font-black bg-gradient-to-r ${color} bg-clip-text text-transparent`}>{value}</p>
+      </div>
+    </div>
   </div>
 );
 
@@ -54,18 +58,18 @@ const Dashboard: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center rounded-lg bg-white p-12">
-        <Loader className="animate-spin text-blue-600" size={32} />
+      <div className="flex items-center justify-center rounded-2xl bg-gradient-to-r from-purple-100 to-blue-100 p-12">
+        <Loader className="animate-spin text-purple-600" size={48} />
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="rounded-lg border border-red-200 bg-red-50 p-4">
+      <div className="rounded-2xl border-2 border-red-200 bg-gradient-to-r from-red-50 to-pink-50 p-6">
         <div className="flex items-center gap-3">
-          <AlertCircle className="text-red-600" size={20} />
-          <p className="text-red-800">{error}</p>
+          <AlertCircle className="text-red-600" size={24} />
+          <p className="text-lg font-semibold text-red-700">{error}</p>
         </div>
       </div>
     );
@@ -84,17 +88,17 @@ const Dashboard: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold text-gray-900">Dashboard</h1>
-        <p className="mt-1 text-gray-600">Customer churn prediction overview</p>
+      <div className="mb-4">
+        <h1 className="text-4xl font-black gradient-text">Dashboard</h1>
+        <p className="mt-2 text-lg text-slate-600 font-medium">Customer churn prediction overview</p>
       </div>
 
       {/* Stats Grid */}
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
-        <StatCard label="Total Customers" value={customerStats?.totalCustomers || 0} />
-        <StatCard label="Churn Rate" value={customerStats?.churnRate || '0%'} color="text-orange-600" />
-        <StatCard label="Total Predictions" value={predictionStats?.totalPredictions || 0} />
-        <StatCard label="High Risk" value={predictionStats?.highRisk || 0} color="text-red-600" />
+        <StatCard label="Total Customers" value={customerStats?.totalCustomers || 0} color="from-blue-500 to-cyan-500" />
+        <StatCard label="Churn Rate" value={customerStats?.churnRate || '0%'} color="from-orange-500 to-red-500" />
+        <StatCard label="Total Predictions" value={predictionStats?.totalPredictions || 0} color="from-emerald-500 to-teal-500" />
+        <StatCard label="High Risk" value={predictionStats?.highRisk || 0} color="from-pink-500 to-red-500" />
       </div>
 
       {/* Charts */}

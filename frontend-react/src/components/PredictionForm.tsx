@@ -160,11 +160,12 @@ const PredictionForm: React.FC<PredictionFormProps> = ({ onSubmit, isLoading = f
     title,
     children,
   }) => (
-    <div className="mb-6">
-      <h3 className="text-lg font-semibold text-gray-800 mb-4 pb-2 border-b border-gray-300">
+    <div className="mb-8 pb-8 border-b border-slate-200/50">
+      <h3 className="text-xl font-black text-slate-800 mb-5 flex items-center gap-2">
+        <span className="inline-block w-1 h-6 bg-gradient-to-b from-purple-500 to-pink-500 rounded-full"></span>
         {title}
       </h3>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">{children}</div>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-5">{children}</div>
     </div>
   );
 
@@ -179,17 +180,15 @@ const PredictionForm: React.FC<PredictionFormProps> = ({ onSubmit, isLoading = f
     required?: boolean;
   }> = ({ label, name, type = 'text', value, options, onChange, error, required = true }) => (
     <div className="flex flex-col">
-      <label className="text-sm font-medium text-gray-700 mb-2">
-        {label} {required && <span className="text-red-500">*</span>}
+      <label className="text-sm font-bold text-slate-700 mb-2 uppercase tracking-wide">
+        {label} {required && <span className="text-purple-500">*</span>}
       </label>
       {options ? (
         <select
           name={name}
           value={value}
           onChange={onChange}
-          className={`px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-            error ? 'border-red-500 bg-red-50' : 'border-gray-300'
-          }`}
+          className={`input ${error ? 'border-red-500 bg-red-50/80' : 'border-slate-300'}`}
         >
           {options.map((opt, idx) => (
             <option key={`${opt}-${idx}`} value={opt}>
@@ -203,51 +202,59 @@ const PredictionForm: React.FC<PredictionFormProps> = ({ onSubmit, isLoading = f
           name={name}
           value={value}
           onChange={onChange}
-          className={`px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-            error ? 'border-red-500 bg-red-50' : 'border-gray-300'
-          }`}
+          className={`input ${error ? 'border-red-500 bg-red-50/80' : 'border-slate-300'}`}
         />
       )}
-      {error && <span className="text-red-500 text-xs mt-1">{error}</span>}
+      {error && <span className="text-red-600 text-xs mt-1.5 font-semibold">⚠️ {error}</span>}
     </div>
   );
 
   if (result) {
     return (
-      <div className="bg-green-50 border border-green-200 rounded-lg p-6">
-        <h3 className="text-lg font-semibold text-green-800 mb-4">Prediction Result</h3>
-        <div className="space-y-2 mb-4">
-          <p className="text-green-700">
-            <span className="font-semibold">Churn Probability:</span> {(result.prediction.churnProbability * 100).toFixed(2)}%
-          </p>
-          <p className="text-green-700">
-            <span className="font-semibold">Risk Level:</span> {result.prediction.riskLevel}
-          </p>
-          <p className="text-green-700">
-            <span className="font-semibold">Priority:</span> {result.prediction.priority}
-          </p>
-          <p className="text-green-700">
-            <span className="font-semibold">Recommendation:</span> {result.prediction.recommendation}
-          </p>
+      <div className="card bg-gradient-to-br from-emerald-50 to-teal-50 border-l-4 border-emerald-500">
+        <div className="flex items-center gap-2 mb-4">
+          <span className="text-2xl">✨</span>
+          <h3 className="text-2xl font-black gradient-text">Prediction Result</h3>
+        </div>
+        <div className="space-y-4 mb-6 bg-white/50 rounded-xl p-4">
+          <div className="flex justify-between items-center py-2 border-b border-emerald-200/50">
+            <span className="font-semibold text-slate-700">📊 Churn Probability:</span>
+            <span className="text-2xl font-black bg-gradient-to-r from-emerald-500 to-teal-500 bg-clip-text text-transparent">{(result.prediction.churnProbability * 100).toFixed(2)}%</span>
+          </div>
+          <div className="flex justify-between items-center py-2 border-b border-emerald-200/50">
+            <span className="font-semibold text-slate-700">🎯 Risk Level:</span>
+            <span className="badge badge-green">{result.prediction.riskLevel}</span>
+          </div>
+          <div className="flex justify-between items-center py-2 border-b border-emerald-200/50">
+            <span className="font-semibold text-slate-700">⚡ Priority:</span>
+            <span className="font-bold text-purple-600">{result.prediction.priority}</span>
+          </div>
+          <div className="py-2">
+            <span className="font-semibold text-slate-700 block mb-2">💡 Recommendation:</span>
+            <p className="text-slate-700 bg-white/60 p-3 rounded-lg italic">{result.prediction.recommendation}</p>
+          </div>
         </div>
         <button
           onClick={handleReset}
-          className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-md font-medium"
+          className="btn-success w-full"
         >
-          Make Another Prediction
+          🔄 Make Another Prediction
         </button>
       </div>
     );
   }
 
   return (
-    <form onSubmit={handleSubmit} className="bg-white rounded-lg shadow-md p-6">
-      <h2 className="text-2xl font-bold mb-6 text-gray-800">Customer Churn Prediction</h2>
+    <form onSubmit={handleSubmit} className="card bg-white/90 backdrop-blur">
+      <div className="flex items-center gap-2 mb-6">
+        <span className="text-3xl">🤖</span>
+        <h2 className="text-3xl font-black bg-gradient-to-r from-slate-900 via-blue-600 to-purple-600 bg-clip-text text-transparent">Churn Prediction</h2>
+      </div>
 
       {submitError && (
-        <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg flex items-start gap-3">
-          <AlertCircle className="w-5 h-5 text-red-600 mt-0.5 flex-shrink-0" />
-          <p className="text-red-700 text-sm">{submitError}</p>
+        <div className="mb-6 p-4 bg-gradient-to-r from-red-50 to-pink-50 border-2 border-red-200 rounded-xl flex items-start gap-3">
+          <AlertCircle className="w-6 h-6 text-red-600 mt-0.5 flex-shrink-0" />
+          <p className="text-red-700 font-medium">{submitError}</p>
         </div>
       )}
 
@@ -416,21 +423,21 @@ const PredictionForm: React.FC<PredictionFormProps> = ({ onSubmit, isLoading = f
       </FormSection>
 
       {/* Action Buttons */}
-      <div className="flex gap-3 mt-8">
+      <div className="flex gap-4 mt-8 flex-col sm:flex-row">
         <button
           type="submit"
           disabled={submitLoading}
-          className="flex-1 px-6 py-3 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 text-white font-semibold rounded-md transition flex items-center justify-center gap-2"
+          className="btn-primary flex-1 flex items-center justify-center gap-2"
         >
           {submitLoading && <Loader className="w-5 h-5 animate-spin" />}
-          {submitLoading ? 'Making Prediction...' : 'Get Prediction'}
+          {submitLoading ? '⏳ Making Prediction...' : '🚀 Get Prediction'}
         </button>
         <button
           type="button"
           onClick={handleReset}
-          className="px-6 py-3 bg-gray-300 hover:bg-gray-400 text-gray-800 font-semibold rounded-md transition"
+          className="btn-secondary flex-1"
         >
-          Reset Form
+          🔄 Reset Form
         </button>
       </div>
     </form>
