@@ -4,299 +4,200 @@
 
 @layer base {
   :root {
-    --background: 0 0% 100%;
-    --foreground: 0 0% 3.6%;
+    --background: 210 40% 98%;
+    --foreground: 222.2 47.4% 11.2%;
 
     --card: 0 0% 100%;
-    --card-foreground: 0 0% 3.6%;
+    --card-foreground: 222.2 47.4% 11.2%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 0 0% 3.6%;
+    --popover-foreground: 222.2 47.4% 11.2%;
 
-    --primary: 0 0% 9%;
-    --primary-foreground: 0 0% 100%;
+    --primary: 222.2 47.4% 11.2%;
+    --primary-foreground: 210 40% 98%;
 
-    --secondary: 0 0% 96.1%;
-    --secondary-foreground: 0 0% 9%;
+    --secondary: 210 40% 96.1%;
+    --secondary-foreground: 222.2 47.4% 11.2%;
 
-    --muted: 0 0% 89.8%;
-    --muted-foreground: 0 0% 45.1%;
+    --muted: 214 32% 91%;
+    --muted-foreground: 215.4 16.3% 46.9%;
 
-    --accent: 0 0% 14.9%;
-    --accent-foreground: 0 0% 100%;
+    --accent: 214 32% 91%;
+    --accent-foreground: 222.2 47.4% 11.2%;
 
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 0 0% 100%;
+    --destructive: 0 72.2% 50.6%;
+    --destructive-foreground: 210 40% 98%;
 
-    --border: 0 0% 89.8%;
-    --input: 0 0% 89.8%;
-    --ring: 0 0% 3.6%;
+    --border: 214.3 31.8% 91.4%;
+    --input: 214.3 31.8% 91.4%;
+    --ring: 221.2 83.2% 53.3%;
 
-    --radius: 0.5rem;
+    --radius: 0.875rem;
   }
 
-  .dark {
-    --background: 0 0% 3.6%;
-    --foreground: 0 0% 98.2%;
-
-    --card: 0 0% 3.6%;
-    --card-foreground: 0 0% 98.2%;
-
-    --popover: 0 0% 3.6%;
-    --popover-foreground: 0 0% 98.2%;
-
-    --primary: 0 0% 98.2%;
-    --primary-foreground: 0 0% 9%;
-
-    --secondary: 0 0% 14.9%;
-    --secondary-foreground: 0 0% 98.2%;
-
-    --muted: 0 0% 14.9%;
-    --muted-foreground: 0 0% 63.9%;
-
-    --accent: 0 0% 98.2%;
-    --accent-foreground: 0 0% 9%;
-
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 0 0% 9%;
-
-    --border: 0 0% 14.9%;
-    --input: 0 0% 14.9%;
-    --ring: 0 0% 83.1%;
-  }
-}
-
-@layer base {
   * {
     border-color: hsl(var(--border));
   }
+
+  html {
+    scroll-behavior: smooth;
+  }
+
   body {
-    background-color: hsl(var(--background));
+    min-height: 100vh;
+    background:
+      radial-gradient(circle at top, rgba(148, 163, 184, 0.15), transparent 35%),
+      linear-gradient(180deg, #f8fafc 0%, #f1f5f9 100%);
     color: hsl(var(--foreground));
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  button,
+  input,
+  select,
+  textarea {
+    font: inherit;
   }
 }
 
 @layer components {
+  .card,
+  .section-card {
+    @apply rounded-2xl border bg-card text-card-foreground shadow-sm;
+  }
+
   .card {
-    border-radius: 0.5rem;
-    border: 1px solid hsl(var(--border));
-    background-color: hsl(var(--card));
-    padding: 1.5rem;
-    box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+    @apply p-6;
   }
 
-  .btn-primary {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    border-radius: 0.375rem;
-    background-color: hsl(var(--primary));
-    padding: 0.5rem 1rem;
-    font-weight: 500;
-    color: hsl(var(--primary-foreground));
-    cursor: pointer;
-    border: none;
-    transition: all 0.2s;
+  .page-shell {
+    @apply mx-auto w-full max-w-[1440px] p-4 md:p-6;
   }
 
-  .btn-primary:hover {
-    opacity: 0.9;
+  .page-header {
+    @apply flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between;
   }
 
-  .btn-primary:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
+  .page-kicker {
+    @apply text-xs font-semibold uppercase tracking-[0.24em] text-muted-foreground;
+  }
+
+  .page-title {
+    @apply text-3xl font-semibold tracking-tight text-foreground md:text-4xl;
+  }
+
+  .page-description {
+    @apply max-w-2xl text-sm text-muted-foreground md:text-base;
+  }
+
+  .btn-primary,
+  .btn-secondary,
+  .btn-outline,
+  .btn-danger,
+  .btn-success {
+    @apply inline-flex items-center justify-center rounded-xl px-4 py-2.5 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50;
+  }
+
+  .btn-primary,
+  .btn-success {
+    @apply bg-primary text-primary-foreground hover:bg-primary/90;
   }
 
   .btn-secondary {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    border-radius: 0.375rem;
-    background-color: hsl(var(--secondary));
-    padding: 0.5rem 1rem;
-    font-weight: 500;
-    color: hsl(var(--secondary-foreground));
-    cursor: pointer;
-    border: none;
-    transition: all 0.2s;
-  }
-
-  .btn-secondary:hover {
-    opacity: 0.8;
-  }
-
-  .btn-secondary:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
+    @apply bg-secondary text-secondary-foreground hover:bg-secondary/80;
   }
 
   .btn-outline {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    border-radius: 0.375rem;
-    border: 1px solid hsl(var(--border));
-    background-color: hsl(var(--background));
-    padding: 0.5rem 1rem;
-    font-weight: 500;
-    color: hsl(var(--foreground));
-    cursor: pointer;
-    transition: all 0.2s;
-  }
-
-  .btn-outline:hover {
-    background-color: hsl(var(--accent));
-    color: hsl(var(--accent-foreground));
-  }
-
-  .btn-outline:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
+    @apply border bg-background text-foreground hover:bg-accent hover:text-accent-foreground;
   }
 
   .btn-danger {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    border-radius: 0.375rem;
-    background-color: hsl(var(--destructive));
-    padding: 0.5rem 1rem;
-    font-weight: 500;
-    color: hsl(var(--destructive-foreground));
-    cursor: pointer;
-    border: none;
-    transition: all 0.2s;
-  }
-
-  .btn-danger:hover {
-    opacity: 0.9;
-  }
-
-  .btn-danger:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-  }
-
-  .btn-success {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    border-radius: 0.375rem;
-    background-color: hsl(var(--primary));
-    padding: 0.5rem 1rem;
-    font-weight: 500;
-    color: hsl(var(--primary-foreground));
-    cursor: pointer;
-    border: none;
-    transition: all 0.2s;
-  }
-
-  .btn-success:hover {
-    opacity: 0.9;
-  }
-
-  .btn-success:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
+    @apply bg-destructive text-destructive-foreground hover:bg-destructive/90;
   }
 
   .input {
-    display: flex;
-    height: 2.5rem;
-    width: 100%;
-    border-radius: 0.375rem;
-    border: 1px solid hsl(var(--input));
-    background-color: hsl(var(--background));
-    padding: 0.5rem 0.75rem;
-    font-size: 0.875rem;
-    color: hsl(var(--foreground));
-    transition: all 0.2s;
-  }
-
-  .input::placeholder {
-    color: hsl(var(--muted-foreground));
-  }
-
-  .input:focus {
-    outline: none;
-    box-shadow: 0 0 0 1px hsl(var(--ring));
-  }
-
-  .input:disabled {
-    cursor: not-allowed;
-    opacity: 0.5;
+    @apply flex h-11 w-full rounded-xl border bg-background px-3 py-2 text-sm text-foreground shadow-sm transition-colors placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50;
   }
 
   .badge {
-    display: inline-block;
-    border-radius: 9999px;
-    padding: 0.25rem 0.75rem;
-    font-size: 0.75rem;
-    font-weight: 600;
+    @apply inline-flex items-center rounded-full border px-2.5 py-1 text-xs font-medium;
   }
 
-  .badge-purple {
-    background-color: hsl(var(--secondary));
-    color: hsl(var(--secondary-foreground));
+  .badge-neutral {
+    @apply border-slate-200 bg-slate-100 text-slate-700;
   }
 
-  .badge-green {
-    background-color: hsl(var(--secondary));
-    color: hsl(var(--secondary-foreground));
+  .badge-high {
+    @apply border-red-200 bg-red-50 text-red-700;
   }
 
-  .badge-red {
-    background-color: hsl(var(--destructive));
-    color: hsl(var(--destructive-foreground));
+  .badge-medium {
+    @apply border-amber-200 bg-amber-50 text-amber-700;
+  }
+
+  .badge-low {
+    @apply border-emerald-200 bg-emerald-50 text-emerald-700;
+  }
+
+  .sidebar-link {
+    @apply flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-slate-600 transition-colors hover:bg-slate-100 hover:text-slate-900;
+  }
+
+  .sidebar-link-active {
+    @apply bg-slate-900 text-white hover:bg-slate-900 hover:text-white;
+  }
+
+  .surface-muted {
+    @apply rounded-2xl border bg-slate-50/80;
+  }
+
+  .stat-card {
+    @apply rounded-2xl border bg-card p-5 shadow-sm;
+  }
+
+  .data-table {
+    @apply min-w-full border-separate border-spacing-0;
+  }
+
+  .data-table thead th {
+    @apply border-b bg-slate-50 px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500;
+  }
+
+  .data-table tbody td {
+    @apply border-b px-4 py-4 text-sm text-slate-700 align-top;
+  }
+
+  .data-table tbody tr:last-child td {
+    @apply border-b-0;
+  }
+
+  .data-table tbody tr:hover {
+    @apply bg-slate-50/70;
+  }
+
+  .filter-pill {
+    @apply inline-flex items-center rounded-full border px-3 py-1.5 text-sm font-medium text-slate-600 transition-colors hover:border-slate-300 hover:bg-slate-100 hover:text-slate-900;
+  }
+
+  .filter-pill-active {
+    @apply border-slate-900 bg-slate-900 text-white hover:border-slate-900 hover:bg-slate-900 hover:text-white;
+  }
+
+  .empty-state {
+    @apply flex min-h-[240px] flex-col items-center justify-center rounded-2xl border border-dashed bg-slate-50/80 px-6 text-center;
   }
 }
 
 @layer utilities {
-  @keyframes fadeInUp {
-    from {
-      opacity: 0;
-      transform: translateY(10px);
-    }
-    to {
-      opacity: 1;
-      transform: translateY(0);
-    }
+  .text-balance {
+    text-wrap: balance;
   }
 
-  @keyframes slideIn {
-    from {
-      opacity: 0;
-      transform: translateX(-20px);
-    }
-    to {
-      opacity: 1;
-      transform: translateX(0);
-    }
-  }
-
-  .animate-fade-in {
-    animation: fadeInUp 0.6s ease-out;
-  }
-
-  .animate-slide-in {
-    animation: slideIn 0.6s ease-out;
-  }
-
-  .glass {
-    background-color: rgba(255, 255, 255, 0.3);
-    backdrop-filter: blur(12px);
-    border: 1px solid rgba(255, 255, 255, 0.2);
-  }
-
-  .gradient-text {
-    background: linear-gradient(to right, #9333ea, #ec4899);
-    background-clip: text;
-    -webkit-background-clip: text;
-    color: transparent;
-  }
-
-  .shadow-lg-purple {
-    box-shadow: 0 10px 15px -3px rgba(168, 85, 247, 0.2);
+  .bg-grid {
+    background-image:
+      linear-gradient(to right, rgba(148, 163, 184, 0.08) 1px, transparent 1px),
+      linear-gradient(to bottom, rgba(148, 163, 184, 0.08) 1px, transparent 1px);
+    background-size: 28px 28px;
   }
 }

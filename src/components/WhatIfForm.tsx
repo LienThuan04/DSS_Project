@@ -1,6 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { ArrowUpRight, ArrowDownRight, ArrowRight } from 'lucide-react';
-import { Prediction } from '../types';
+import React, { useState } from 'react';
+import { ArrowRight, Wand2 } from 'lucide-react';
 
 interface WhatIfFormProps {
   onSubmit: (request: any) => void;
@@ -9,8 +8,13 @@ interface WhatIfFormProps {
   customers?: any[];
 }
 
-const WhatIfForm: React.FC<WhatIfFormProps> = ({ onSubmit, isLoading, error, customers = [] }) => {
-  const [step, setStep] = useState(1); // Step 1: Select customer, Step 2: Enter changes
+const WhatIfForm: React.FC<WhatIfFormProps> = ({
+  onSubmit,
+  isLoading,
+  error,
+  customers = [],
+}) => {
+  const [step, setStep] = useState(1);
   const [selectedCustomerId, setSelectedCustomerId] = useState('');
   const [scenarioName, setScenarioName] = useState('');
   const [changes, setChanges] = useState<Record<string, any>>({});
@@ -18,36 +22,40 @@ const WhatIfForm: React.FC<WhatIfFormProps> = ({ onSubmit, isLoading, error, cus
 
   const handleSelectCustomer = () => {
     if (!selectedCustomerId) {
-      setFormError('Please select a customer');
+      setFormError('Please select a customer.');
       return;
     }
+
     setFormError(null);
     setStep(2);
   };
 
   const handleChangeInput = (field: string, value: any) => {
-    setChanges(prev => ({
-      ...prev,
-      [field]: value
-    }));
+    setChanges((prev) => {
+      const next = { ...prev };
+
+      if (value === '' || Number.isNaN(value)) {
+        delete next[field];
+      } else {
+        next[field] = value;
+      }
+
+      return next;
+    });
   };
 
   const handleSubmit = () => {
     if (Object.keys(changes).length === 0) {
-      setFormError('Please enter at least one change');
+      setFormError('Please provide at least one change to compare.');
       return;
     }
 
-    const request = {
+    setFormError(null);
+    onSubmit({
       customerId: selectedCustomerId,
       changes,
-      scenarioName: scenarioName || 'Unnamed Scenario'
-    };
-    
-    console.log('[WhatIfForm] Submitting with customerId:', selectedCustomerId);
-    console.log('[WhatIfForm] Full request:', request);
-
-    onSubmit(request);
+      scenarioName: scenarioName || 'Scenario variation',
+    });
   };
 
   const handleReset = () => {
@@ -60,186 +68,197 @@ const WhatIfForm: React.FC<WhatIfFormProps> = ({ onSubmit, isLoading, error, cus
 
   if (step === 1) {
     return (
-      <div className="rounded-lg border border-gray-200 bg-white p-6">
-        <h2 className="mb-4 text-xl font-bold text-gray-900">Step 1: Select Base Customer</h2>
-        <div className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700">Customer</label>
-            <select
-              value={selectedCustomerId}
-              onChange={(e) => {
-                console.log('[WhatIfForm] Customer selected:', e.target.value);
-                setSelectedCustomerId(e.target.value);
-              }}
-              className="mt-1 w-full rounded border border-gray-300 bg-white px-3 py-2 text-gray-900 shadow-sm focus:border-blue-500 focus:outline-none"
-            >
-              <option value="">-- Select a customer --</option>
-              {customers.map(customer => (
-                <option key={customer.id} value={customer.id}>
-                  {customer.customerID} - ${customer.MonthlyCharges?.toFixed(2) || 'N/A'}/mo
-                </option>
-              ))}
-            </select>
-          </div>
-
-          {formError && (
-            <div className="rounded border border-red-300 bg-red-50 p-3">
-              <p className="text-sm text-red-700">{formError}</p>
+      <div className="space-y-5">
+        <div className="rounded-2xl border bg-slate-50 p-4">
+          <div className="flex items-center gap-3">
+            <div className="flex size-10 items-center justify-center rounded-2xl bg-white text-slate-900 shadow-sm">
+              <Wand2 size={18} />
             </div>
-          )}
-
-          <button
-            onClick={handleSelectCustomer}
-            disabled={isLoading}
-            className="w-full rounded bg-blue-600 px-4 py-2 font-medium text-white hover:bg-blue-700 disabled:bg-gray-400"
-          >
-            Next Step →
-          </button>
+            <div>
+              <p className="text-sm font-medium text-slate-900">Step 1</p>
+              <p className="text-sm text-slate-500">Choose the baseline customer.</p>
+            </div>
+          </div>
         </div>
+
+        <div className="space-y-2">
+          <label className="text-sm font-medium text-slate-700">Base customer</label>
+          <select
+            value={selectedCustomerId}
+            onChange={(event) => setSelectedCustomerId(event.target.value)}
+            className="input"
+          >
+            <option value="">Select a customer</option>
+            {customers.map((customer) => (
+              <option key={customer.id} value={customer.id}>
+                {customer.customerID} | ${customer.MonthlyCharges?.toFixed(2) || 'N/A'} / mo
+              </option>
+            ))}
+          </select>
+          <p className="text-xs text-slate-500">{customers.length} customers available</p>
+        </div>
+
+        {formError && (
+          <div className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+            {formError}
+          </div>
+        )}
+
+        <button onClick={handleSelectCustomer} disabled={isLoading} className="btn-primary w-full gap-2">
+          Continue
+          <ArrowRight size={16} />
+        </button>
       </div>
     );
   }
 
   return (
-    <div className="rounded-lg border border-gray-200 bg-white p-6">
-      <h2 className="mb-4 text-xl font-bold text-gray-900">Step 2: Modify Attributes</h2>
-      <div className="space-y-4">
-        <div>
-          <label className="block text-sm font-medium text-gray-700">Scenario Name (optional)</label>
+    <div className="space-y-5">
+      <div className="rounded-2xl border bg-slate-50 p-4">
+        <p className="text-sm font-medium text-slate-900">Step 2</p>
+        <p className="mt-1 text-sm text-slate-500">
+          Change one or more attributes and compare against the selected baseline.
+        </p>
+      </div>
+
+      <div className="space-y-2">
+        <label className="text-sm font-medium text-slate-700">Scenario name</label>
+        <input
+          type="text"
+          value={scenarioName}
+          onChange={(event) => setScenarioName(event.target.value)}
+          placeholder="Example: Upgrade to annual contract"
+          className="input"
+        />
+      </div>
+
+      <div className="grid gap-4 md:grid-cols-2">
+        <div className="space-y-2">
+          <label className="text-sm font-medium text-slate-700">Tenure (months)</label>
           <input
-            type="text"
-            value={scenarioName}
-            onChange={(e) => setScenarioName(e.target.value)}
-            placeholder="e.g., 'Upgrade to Annual Contract'"
-            className="mt-1 w-full rounded border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none"
+            type="number"
+            value={changes.tenure ?? ''}
+            onChange={(event) =>
+              handleChangeInput(
+                'tenure',
+                event.target.value === '' ? '' : parseInt(event.target.value, 10)
+              )
+            }
+            placeholder="24"
+            className="input"
           />
         </div>
 
-        <div className="rounded-lg bg-blue-50 p-4">
-          <h3 className="font-semibold text-blue-900 mb-3">Edit Customer Attributes</h3>
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-            {true && (
-              <div>
-                <label className="block text-sm font-medium text-gray-700">Tenure (months)</label>
-                <input
-                  type="number"
-                  value={changes.tenure || ''}
-                  onChange={(e) => handleChangeInput('tenure', parseInt(e.target.value))}
-                  placeholder="e.g., 24"
-                  className="mt-1 w-full rounded border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none"
-                />
-              </div>
-            )}
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700">Monthly Charges ($)</label>
-              <input
-                type="number"
-                step="0.01"
-                value={changes.MonthlyCharges || ''}
-                onChange={(e) => handleChangeInput('MonthlyCharges', parseFloat(e.target.value))}
-                placeholder="e.g., 85.50"
-                className="mt-1 w-full rounded border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none"
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700">Contract</label>
-              <select
-                value={changes.Contract || ''}
-                onChange={(e) => handleChangeInput('Contract', e.target.value)}
-                className="mt-1 w-full rounded border border-gray-300 bg-white px-3 py-2 text-gray-900 shadow-sm focus:border-blue-500 focus:outline-none"
-              >
-                <option value="">-- No change --</option>
-                <option value="Month-to-month">Month-to-month</option>
-                <option value="One year">One year</option>
-                <option value="Two year">Two year</option>
-              </select>
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700">Internet Service</label>
-              <select
-                value={changes.InternetService || ''}
-                onChange={(e) => handleChangeInput('InternetService', e.target.value)}
-                className="mt-1 w-full rounded border border-gray-300 bg-white px-3 py-2 text-gray-900 shadow-sm focus:border-blue-500 focus:outline-none"
-              >
-                <option value="">-- No change --</option>
-                <option value="DSL">DSL</option>
-                <option value="Fiber optic">Fiber optic</option>
-                <option value="No">No internet service</option>
-              </select>
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700">Payment Method</label>
-              <select
-                value={changes.PaymentMethod || ''}
-                onChange={(e) => handleChangeInput('PaymentMethod', e.target.value)}
-                className="mt-1 w-full rounded border border-gray-300 bg-white px-3 py-2 text-gray-900 shadow-sm focus:border-blue-500 focus:outline-none"
-              >
-                <option value="">-- No change --</option>
-                <option value="Electronic check">Electronic check</option>
-                <option value="Mailed check">Mailed check</option>
-                <option value="Bank transfer">Bank transfer</option>
-                <option value="Credit card">Credit card</option>
-              </select>
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700">Online Security</label>
-              <select
-                value={changes.OnlineSecurity || ''}
-                onChange={(e) => handleChangeInput('OnlineSecurity', e.target.value)}
-                className="mt-1 w-full rounded border border-gray-300 bg-white px-3 py-2 text-gray-900 shadow-sm focus:border-blue-500 focus:outline-none"
-              >
-                <option value="">-- No change --</option>
-                <option value="Yes">Yes</option>
-                <option value="No">No</option>
-              </select>
-            </div>
-          </div>
+        <div className="space-y-2">
+          <label className="text-sm font-medium text-slate-700">Monthly charges</label>
+          <input
+            type="number"
+            step="0.01"
+            value={changes.MonthlyCharges ?? ''}
+            onChange={(event) =>
+              handleChangeInput(
+                'MonthlyCharges',
+                event.target.value === '' ? '' : parseFloat(event.target.value)
+              )
+            }
+            placeholder="85.50"
+            className="input"
+          />
         </div>
 
-        <div className="text-sm text-gray-600">
-          <p className="font-medium mb-2">Changes to apply: {Object.keys(changes).length}</p>
-          {Object.keys(changes).length > 0 && (
-            <ul className="list-inside list-disc space-y-1">
-              {Object.entries(changes).map(([key, value]) => (
-                <li key={key}>{key}: {String(value)}</li>
-              ))}
-            </ul>
-          )}
+        <div className="space-y-2">
+          <label className="text-sm font-medium text-slate-700">Contract</label>
+          <select
+            value={changes.Contract ?? ''}
+            onChange={(event) => handleChangeInput('Contract', event.target.value)}
+            className="input"
+          >
+            <option value="">No change</option>
+            <option value="Month-to-month">Month-to-month</option>
+            <option value="One year">One year</option>
+            <option value="Two year">Two year</option>
+          </select>
         </div>
 
-        {formError && (
-          <div className="rounded border border-red-300 bg-red-50 p-3">
-            <p className="text-sm text-red-700">{formError}</p>
+        <div className="space-y-2">
+          <label className="text-sm font-medium text-slate-700">Internet service</label>
+          <select
+            value={changes.InternetService ?? ''}
+            onChange={(event) => handleChangeInput('InternetService', event.target.value)}
+            className="input"
+          >
+            <option value="">No change</option>
+            <option value="DSL">DSL</option>
+            <option value="Fiber optic">Fiber optic</option>
+            <option value="No">No internet service</option>
+          </select>
+        </div>
+
+        <div className="space-y-2">
+          <label className="text-sm font-medium text-slate-700">Payment method</label>
+          <select
+            value={changes.PaymentMethod ?? ''}
+            onChange={(event) => handleChangeInput('PaymentMethod', event.target.value)}
+            className="input"
+          >
+            <option value="">No change</option>
+            <option value="Electronic check">Electronic check</option>
+            <option value="Mailed check">Mailed check</option>
+            <option value="Bank transfer (automatic)">Bank transfer (automatic)</option>
+            <option value="Credit card (automatic)">Credit card (automatic)</option>
+          </select>
+        </div>
+
+        <div className="space-y-2">
+          <label className="text-sm font-medium text-slate-700">Online security</label>
+          <select
+            value={changes.OnlineSecurity ?? ''}
+            onChange={(event) => handleChangeInput('OnlineSecurity', event.target.value)}
+            className="input"
+          >
+            <option value="">No change</option>
+            <option value="Yes">Yes</option>
+            <option value="No">No</option>
+          </select>
+        </div>
+      </div>
+
+      <div className="rounded-2xl border bg-slate-50 p-4">
+        <p className="text-sm font-medium text-slate-900">
+          Pending changes ({Object.keys(changes).length})
+        </p>
+        {Object.keys(changes).length === 0 ? (
+          <p className="mt-2 text-sm text-slate-500">No modifications added yet.</p>
+        ) : (
+          <div className="mt-3 flex flex-wrap gap-2">
+            {Object.entries(changes).map(([key, value]) => (
+              <span key={key} className="badge badge-neutral">
+                {key}: {String(value)}
+              </span>
+            ))}
           </div>
         )}
+      </div>
 
-        {error && (
-          <div className="rounded border border-red-300 bg-red-50 p-3">
-            <p className="text-sm text-red-700">{error}</p>
-          </div>
-        )}
-
-        <div className="flex gap-2">
-          <button
-            onClick={handleReset}
-            disabled={isLoading}
-            className="flex-1 rounded border border-gray-300 bg-white px-4 py-2 font-medium text-gray-700 hover:bg-gray-50 disabled:bg-gray-100"
-          >
-            Reset
-          </button>
-          <button
-            onClick={handleSubmit}
-            disabled={isLoading}
-            className="flex-1 rounded bg-blue-600 px-4 py-2 font-medium text-white hover:bg-blue-700 disabled:bg-gray-400"
-          >
-            {isLoading ? 'Comparing...' : 'Compare Scenarios'}
-          </button>
+      {formError && (
+        <div className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+          {formError}
         </div>
+      )}
+
+      {error && (
+        <div className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+          {error}
+        </div>
+      )}
+
+      <div className="flex gap-3">
+        <button onClick={handleReset} disabled={isLoading} className="btn-outline flex-1">
+          Reset
+        </button>
+        <button onClick={handleSubmit} disabled={isLoading} className="btn-primary flex-1">
+          {isLoading ? 'Comparing...' : 'Compare scenario'}
+        </button>
       </div>
     </div>
   );

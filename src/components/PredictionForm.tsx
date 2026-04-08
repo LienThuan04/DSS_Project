@@ -1,86 +1,129 @@
 import React, { useState } from 'react';
 import { AlertCircle, Loader } from 'lucide-react';
 import { predictionsApi } from '../services/api';
+import PredictionResultCard from './PredictionResultCard';
 
 interface PredictionFormProps {
   onSubmit?: (result: any) => void;
   isLoading?: boolean;
 }
 
-const PredictionForm: React.FC<PredictionFormProps> = ({ onSubmit, isLoading = false }) => {
-  const [formData, setFormData] = useState({
-    gender: 'Male',
-    SeniorCitizen: '0',
-    Partner: 'No',
-    Dependents: 'No',
-    tenure: '12',
-    PhoneService: 'Yes',
-    MultipleLines: 'No',
-    InternetService: 'DSL',
-    OnlineSecurity: 'No',
-    OnlineBackup: 'No',
-    DeviceProtection: 'No',
-    TechSupport: 'No',
-    StreamingTV: 'No',
-    StreamingMovies: 'No',
-    Contract: 'Month-to-month',
-    PaperlessBilling: 'Yes',
-    PaymentMethod: 'Electronic check',
-    MonthlyCharges: '65',
-    TotalCharges: '780',
-  });
+type Option = {
+  label: string;
+  value: string;
+};
 
-  const [errors, setErrors] = useState<{ [key: string]: string }>({});
+const yesNoOptions: Option[] = [
+  { label: 'Yes', value: 'Yes' },
+  { label: 'No', value: 'No' },
+];
+
+const seniorOptions: Option[] = [
+  { label: 'No', value: '0' },
+  { label: 'Yes', value: '1' },
+];
+
+const internetOptions: Option[] = [
+  { label: 'DSL', value: 'DSL' },
+  { label: 'Fiber optic', value: 'Fiber optic' },
+  { label: 'No internet service', value: 'No' },
+];
+
+const serviceOptions: Option[] = [
+  { label: 'Yes', value: 'Yes' },
+  { label: 'No', value: 'No' },
+  { label: 'No internet service', value: 'No internet service' },
+];
+
+const paymentOptions: Option[] = [
+  { label: 'Electronic check', value: 'Electronic check' },
+  { label: 'Mailed check', value: 'Mailed check' },
+  { label: 'Bank transfer (automatic)', value: 'Bank transfer (automatic)' },
+  { label: 'Credit card (automatic)', value: 'Credit card (automatic)' },
+];
+
+const multipleLineOptions: Option[] = [
+  { label: 'Yes', value: 'Yes' },
+  { label: 'No', value: 'No' },
+  { label: 'No phone service', value: 'No phone service' },
+];
+
+const getInitialFormData = () => ({
+  gender: 'Male',
+  SeniorCitizen: '0',
+  Partner: 'No',
+  Dependents: 'No',
+  tenure: '12',
+  PhoneService: 'Yes',
+  MultipleLines: 'No',
+  InternetService: 'DSL',
+  OnlineSecurity: 'No',
+  OnlineBackup: 'No',
+  DeviceProtection: 'No',
+  TechSupport: 'No',
+  StreamingTV: 'No',
+  StreamingMovies: 'No',
+  Contract: 'Month-to-month',
+  PaperlessBilling: 'Yes',
+  PaymentMethod: 'Electronic check',
+  MonthlyCharges: '65',
+  TotalCharges: '780',
+});
+
+const sectionClasses = 'rounded-2xl border bg-slate-50 p-5';
+
+const PredictionForm: React.FC<PredictionFormProps> = ({ onSubmit }) => {
+  const [formData, setFormData] = useState(getInitialFormData());
+  const [errors, setErrors] = useState<Record<string, string>>({});
   const [submitLoading, setSubmitLoading] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [result, setResult] = useState<any>(null);
 
   const validateForm = (): boolean => {
-    const newErrors: { [key: string]: string } = {};
+    const nextErrors: Record<string, string> = {};
 
-    // Validate required fields
-    if (!formData.gender) newErrors.gender = 'Gender is required';
-    if (!formData.Partner) newErrors.Partner = 'Partner status is required';
-    if (!formData.Dependents) newErrors.Dependents = 'Dependents status is required';
+    if (!formData.gender) nextErrors.gender = 'Gender is required';
+    if (!formData.Partner) nextErrors.Partner = 'Partner status is required';
+    if (!formData.Dependents) nextErrors.Dependents = 'Dependents status is required';
 
-    // Validate numeric fields
-    const tenure = parseInt(formData.tenure);
-    if (isNaN(tenure) || tenure < 0 || tenure > 72) {
-      newErrors.tenure = 'Tenure must be between 0 and 72 months';
+    const tenure = parseInt(formData.tenure, 10);
+    if (Number.isNaN(tenure) || tenure < 0 || tenure > 72) {
+      nextErrors.tenure = 'Tenure must be between 0 and 72 months';
     }
 
     const monthlyCharges = parseFloat(formData.MonthlyCharges);
-    if (isNaN(monthlyCharges) || monthlyCharges < 0) {
-      newErrors.MonthlyCharges = 'Monthly charges must be a positive number';
+    if (Number.isNaN(monthlyCharges) || monthlyCharges < 0) {
+      nextErrors.MonthlyCharges = 'Monthly charges must be a positive number';
     }
 
     const totalCharges = parseFloat(formData.TotalCharges);
-    if (isNaN(totalCharges) || totalCharges < 0) {
-      newErrors.TotalCharges = 'Total charges must be a positive number';
+    if (Number.isNaN(totalCharges) || totalCharges < 0) {
+      nextErrors.TotalCharges = 'Total charges must be a positive number';
     }
 
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
+    setErrors(nextErrors);
+    return Object.keys(nextErrors).length === 0;
   };
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
-    const { name, value } = e.target;
+  const handleInputChange = (event: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+    const { name, value } = event.target;
+
     setFormData((prev) => ({
       ...prev,
       [name]: value,
     }));
-    // Clear error for this field when user starts typing
+
     if (errors[name]) {
       setErrors((prev) => {
-        const newErrors = { ...prev };
-        delete newErrors[name];
-        return newErrors;
+        const nextErrors = { ...prev };
+        delete nextErrors[name];
+        return nextErrors;
       });
     }
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSubmit = async (event: React.FormEvent) => {
+    event.preventDefault();
 
     if (!validateForm()) {
       return;
@@ -91,13 +134,12 @@ const PredictionForm: React.FC<PredictionFormProps> = ({ onSubmit, isLoading = f
     setResult(null);
 
     try {
-      // Convert string values to correct types
       const payload = {
         gender: formData.gender,
-        SeniorCitizen: parseInt(formData.SeniorCitizen),
+        SeniorCitizen: parseInt(formData.SeniorCitizen, 10),
         Partner: formData.Partner,
         Dependents: formData.Dependents,
-        tenure: parseInt(formData.tenure),
+        tenure: parseInt(formData.tenure, 10),
         PhoneService: formData.PhoneService,
         MultipleLines: formData.MultipleLines,
         InternetService: formData.InternetService,
@@ -115,84 +157,49 @@ const PredictionForm: React.FC<PredictionFormProps> = ({ onSubmit, isLoading = f
       };
 
       const response = await predictionsApi.predictRaw(payload);
-      // Backend returns { success: true, prediction: {...} } structure
-      const result = response.data.prediction || response.data.data || response.data;
-      setResult(result);
+      const predictionResult = response.data.prediction || response.data.data || response.data;
+
+      setResult(predictionResult);
+
       if (onSubmit) {
-        onSubmit(result);
+        onSubmit(predictionResult);
       }
     } catch (error: any) {
-      const errorMsg = error?.response?.data?.message || error?.message || 'Failed to make prediction';
-      setSubmitError(errorMsg);
+      setSubmitError(
+        error?.response?.data?.message || error?.message || 'Failed to make prediction'
+      );
     } finally {
       setSubmitLoading(false);
     }
   };
 
   const handleReset = () => {
-    setFormData({
-      gender: 'Male',
-      SeniorCitizen: '0',
-      Partner: 'No',
-      Dependents: 'No',
-      tenure: '12',
-      PhoneService: 'Yes',
-      MultipleLines: 'No',
-      InternetService: 'DSL',
-      OnlineSecurity: 'No',
-      OnlineBackup: 'No',
-      DeviceProtection: 'No',
-      TechSupport: 'No',
-      StreamingTV: 'No',
-      StreamingMovies: 'No',
-      Contract: 'Month-to-month',
-      PaperlessBilling: 'Yes',
-      PaymentMethod: 'Electronic check',
-      MonthlyCharges: '65',
-      TotalCharges: '780',
-    });
+    setFormData(getInitialFormData());
     setErrors({});
     setSubmitError(null);
     setResult(null);
   };
-
-  const FormSection: React.FC<{ title: string; children: React.ReactNode }> = ({
-    title,
-    children,
-  }) => (
-    <div className="mb-8 pb-8 border-b border-slate-200/50">
-      <h3 className="text-xl font-black text-slate-800 mb-5 flex items-center gap-2">
-        <span className="inline-block w-1 h-6 bg-gradient-to-b from-purple-500 to-pink-500 rounded-full"></span>
-        {title}
-      </h3>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-5">{children}</div>
-    </div>
-  );
 
   const FormField: React.FC<{
     label: string;
     name: string;
     type?: string;
     value: string;
-    options?: string[];
-    onChange: (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => void;
+    options?: Option[];
     error?: string;
-    required?: boolean;
-  }> = ({ label, name, type = 'text', value, options, onChange, error, required = true }) => (
-    <div className="flex flex-col">
-      <label className="text-sm font-bold text-slate-700 mb-2 uppercase tracking-wide">
-        {label} {required && <span className="text-purple-500">*</span>}
-      </label>
+  }> = ({ label, name, type = 'text', value, options, error }) => (
+    <div className="space-y-2">
+      <label className="text-sm font-medium text-slate-700">{label}</label>
       {options ? (
         <select
           name={name}
           value={value}
-          onChange={onChange}
-          className={`input ${error ? 'border-red-500 bg-red-50/80' : 'border-slate-300'}`}
+          onChange={handleInputChange}
+          className={`input ${error ? 'border-red-300 focus-visible:ring-red-200' : ''}`}
         >
-          {options.map((opt, idx) => (
-            <option key={`${opt}-${idx}`} value={opt}>
-              {opt}
+          {options.map((option) => (
+            <option key={`${name}-${option.value}`} value={option.value}>
+              {option.label}
             </option>
           ))}
         </select>
@@ -201,243 +208,191 @@ const PredictionForm: React.FC<PredictionFormProps> = ({ onSubmit, isLoading = f
           type={type}
           name={name}
           value={value}
-          onChange={onChange}
-          className={`input ${error ? 'border-red-500 bg-red-50/80' : 'border-slate-300'}`}
+          onChange={handleInputChange}
+          className={`input ${error ? 'border-red-300 focus-visible:ring-red-200' : ''}`}
         />
       )}
-      {error && <span className="text-red-600 text-xs mt-1.5 font-semibold">⚠️ {error}</span>}
+      {error && <p className="text-xs text-red-600">{error}</p>}
     </div>
   );
 
-  if (result) {
-    return (
-      <div className="card bg-gradient-to-br from-emerald-50 to-teal-50 border-l-4 border-emerald-500">
-        <div className="flex items-center gap-2 mb-4">
-          <span className="text-2xl">✨</span>
-          <h3 className="text-2xl font-black gradient-text">Prediction Result</h3>
-        </div>
-        <div className="space-y-4 mb-6 bg-white/50 rounded-xl p-4">
-          <div className="flex justify-between items-center py-2 border-b border-emerald-200/50">
-            <span className="font-semibold text-slate-700">📊 Churn Probability:</span>
-            <span className="text-2xl font-black bg-gradient-to-r from-emerald-500 to-teal-500 bg-clip-text text-transparent">{(result.prediction.churnProbability * 100).toFixed(2)}%</span>
-          </div>
-          <div className="flex justify-between items-center py-2 border-b border-emerald-200/50">
-            <span className="font-semibold text-slate-700">🎯 Risk Level:</span>
-            <span className="badge badge-green">{result.prediction.riskLevel}</span>
-          </div>
-          <div className="flex justify-between items-center py-2 border-b border-emerald-200/50">
-            <span className="font-semibold text-slate-700">⚡ Priority:</span>
-            <span className="font-bold text-purple-600">{result.prediction.priority}</span>
-          </div>
-          <div className="py-2">
-            <span className="font-semibold text-slate-700 block mb-2">💡 Recommendation:</span>
-            <p className="text-slate-700 bg-white/60 p-3 rounded-lg italic">{result.prediction.recommendation}</p>
-          </div>
-        </div>
-        <button
-          onClick={handleReset}
-          className="btn-success w-full"
-        >
-          🔄 Make Another Prediction
-        </button>
-      </div>
-    );
+  if (result && !onSubmit) {
+    return <PredictionResultCard prediction={result} onClose={handleReset} />;
   }
 
   return (
-    <form onSubmit={handleSubmit} className="card bg-white/90 backdrop-blur">
-      <div className="flex items-center gap-2 mb-6">
-        <span className="text-3xl">🤖</span>
-        <h2 className="text-3xl font-black bg-gradient-to-r from-slate-900 via-blue-600 to-purple-600 bg-clip-text text-transparent">Churn Prediction</h2>
-      </div>
-
+    <form onSubmit={handleSubmit} className="space-y-6">
       {submitError && (
-        <div className="mb-6 p-4 bg-gradient-to-r from-red-50 to-pink-50 border-2 border-red-200 rounded-xl flex items-start gap-3">
-          <AlertCircle className="w-6 h-6 text-red-600 mt-0.5 flex-shrink-0" />
-          <p className="text-red-700 font-medium">{submitError}</p>
+        <div className="rounded-2xl border border-red-200 bg-red-50 p-4">
+          <div className="flex items-start gap-3 text-red-700">
+            <AlertCircle className="mt-0.5" size={18} />
+            <p className="text-sm">{submitError}</p>
+          </div>
         </div>
       )}
 
-      {/* Demographics Section */}
-      <FormSection title="Demographics">
-        <FormField
-          label="Gender"
-          name="gender"
-          options={['Male', 'Female']}
-          value={formData.gender}
-          onChange={handleInputChange}
-          error={errors.gender}
-        />
-        <FormField
-          label="Senior Citizen"
-          name="SeniorCitizen"
-          options={['0 - No', '1 - Yes']}
-          value={formData.SeniorCitizen}
-          onChange={handleInputChange}
-        />
-        <FormField
-          label="Partner"
-          name="Partner"
-          options={['Yes', 'No']}
-          value={formData.Partner}
-          onChange={handleInputChange}
-          error={errors.Partner}
-        />
-        <FormField
-          label="Dependents"
-          name="Dependents"
-          options={['Yes', 'No']}
-          value={formData.Dependents}
-          onChange={handleInputChange}
-          error={errors.Dependents}
-        />
-      </FormSection>
+      <div className="grid gap-4 xl:grid-cols-2">
+        <section className={sectionClasses}>
+          <h3 className="text-base font-semibold text-slate-900">Customer profile</h3>
+          <div className="mt-4 grid gap-4 md:grid-cols-2">
+            <FormField
+              label="Gender"
+              name="gender"
+              value={formData.gender}
+              options={[
+                { label: 'Male', value: 'Male' },
+                { label: 'Female', value: 'Female' },
+              ]}
+              error={errors.gender}
+            />
+            <FormField
+              label="Senior citizen"
+              name="SeniorCitizen"
+              value={formData.SeniorCitizen}
+              options={seniorOptions}
+            />
+            <FormField
+              label="Partner"
+              name="Partner"
+              value={formData.Partner}
+              options={yesNoOptions}
+              error={errors.Partner}
+            />
+            <FormField
+              label="Dependents"
+              name="Dependents"
+              value={formData.Dependents}
+              options={yesNoOptions}
+              error={errors.Dependents}
+            />
+          </div>
+        </section>
 
-      {/* Account Section */}
-      <FormSection title="Account Information">
-        <FormField
-          label="Tenure (months)"
-          name="tenure"
-          type="number"
-          value={formData.tenure}
-          onChange={handleInputChange}
-          error={errors.tenure}
-        />
-        <FormField
-          label="Monthly Charges ($)"
-          name="MonthlyCharges"
-          type="number"
-          value={formData.MonthlyCharges}
-          onChange={handleInputChange}
-          error={errors.MonthlyCharges}
-        />
-        <FormField
-          label="Total Charges ($)"
-          name="TotalCharges"
-          type="number"
-          value={formData.TotalCharges}
-          onChange={handleInputChange}
-          error={errors.TotalCharges}
-        />
-      </FormSection>
+        <section className={sectionClasses}>
+          <h3 className="text-base font-semibold text-slate-900">Billing</h3>
+          <div className="mt-4 grid gap-4 md:grid-cols-2">
+            <FormField
+              label="Tenure (months)"
+              name="tenure"
+              type="number"
+              value={formData.tenure}
+              error={errors.tenure}
+            />
+            <FormField
+              label="Monthly charges"
+              name="MonthlyCharges"
+              type="number"
+              value={formData.MonthlyCharges}
+              error={errors.MonthlyCharges}
+            />
+            <FormField
+              label="Total charges"
+              name="TotalCharges"
+              type="number"
+              value={formData.TotalCharges}
+              error={errors.TotalCharges}
+            />
+            <FormField
+              label="Contract"
+              name="Contract"
+              value={formData.Contract}
+              options={[
+                { label: 'Month-to-month', value: 'Month-to-month' },
+                { label: 'One year', value: 'One year' },
+                { label: 'Two year', value: 'Two year' },
+              ]}
+            />
+            <FormField
+              label="Paperless billing"
+              name="PaperlessBilling"
+              value={formData.PaperlessBilling}
+              options={yesNoOptions}
+            />
+            <FormField
+              label="Payment method"
+              name="PaymentMethod"
+              value={formData.PaymentMethod}
+              options={paymentOptions}
+            />
+          </div>
+        </section>
+      </div>
 
-      {/* Phone Services Section */}
-      <FormSection title="Phone Services">
-        <FormField
-          label="Phone Service"
-          name="PhoneService"
-          options={['Yes', 'No']}
-          value={formData.PhoneService}
-          onChange={handleInputChange}
-        />
-        <FormField
-          label="Multiple Lines"
-          name="MultipleLines"
-          options={['Yes', 'No', 'No phone service']}
-          value={formData.MultipleLines}
-          onChange={handleInputChange}
-        />
-      </FormSection>
+      <div className="grid gap-4 xl:grid-cols-2">
+        <section className={sectionClasses}>
+          <h3 className="text-base font-semibold text-slate-900">Phone services</h3>
+          <div className="mt-4 grid gap-4 md:grid-cols-2">
+            <FormField
+              label="Phone service"
+              name="PhoneService"
+              value={formData.PhoneService}
+              options={yesNoOptions}
+            />
+            <FormField
+              label="Multiple lines"
+              name="MultipleLines"
+              value={formData.MultipleLines}
+              options={multipleLineOptions}
+            />
+          </div>
+        </section>
 
-      {/* Internet Services Section */}
-      <FormSection title="Internet Services">
-        <FormField
-          label="Internet Service"
-          name="InternetService"
-          options={['DSL', 'Fiber optic', 'No']}
-          value={formData.InternetService}
-          onChange={handleInputChange}
-        />
-        <FormField
-          label="Online Security"
-          name="OnlineSecurity"
-          options={['Yes', 'No', 'No internet service']}
-          value={formData.OnlineSecurity}
-          onChange={handleInputChange}
-        />
-        <FormField
-          label="Online Backup"
-          name="OnlineBackup"
-          options={['Yes', 'No', 'No internet service']}
-          value={formData.OnlineBackup}
-          onChange={handleInputChange}
-        />
-        <FormField
-          label="Device Protection"
-          name="DeviceProtection"
-          options={['Yes', 'No', 'No internet service']}
-          value={formData.DeviceProtection}
-          onChange={handleInputChange}
-        />
-        <FormField
-          label="Tech Support"
-          name="TechSupport"
-          options={['Yes', 'No', 'No internet service']}
-          value={formData.TechSupport}
-          onChange={handleInputChange}
-        />
-        <FormField
-          label="Streaming TV"
-          name="StreamingTV"
-          options={['Yes', 'No', 'No internet service']}
-          value={formData.StreamingTV}
-          onChange={handleInputChange}
-        />
-        <FormField
-          label="Streaming Movies"
-          name="StreamingMovies"
-          options={['Yes', 'No', 'No internet service']}
-          value={formData.StreamingMovies}
-          onChange={handleInputChange}
-        />
-      </FormSection>
+        <section className={sectionClasses}>
+          <h3 className="text-base font-semibold text-slate-900">Internet plan</h3>
+          <div className="mt-4 grid gap-4 md:grid-cols-2">
+            <FormField
+              label="Internet service"
+              name="InternetService"
+              value={formData.InternetService}
+              options={internetOptions}
+            />
+            <FormField
+              label="Online security"
+              name="OnlineSecurity"
+              value={formData.OnlineSecurity}
+              options={serviceOptions}
+            />
+            <FormField
+              label="Online backup"
+              name="OnlineBackup"
+              value={formData.OnlineBackup}
+              options={serviceOptions}
+            />
+            <FormField
+              label="Device protection"
+              name="DeviceProtection"
+              value={formData.DeviceProtection}
+              options={serviceOptions}
+            />
+            <FormField
+              label="Tech support"
+              name="TechSupport"
+              value={formData.TechSupport}
+              options={serviceOptions}
+            />
+            <FormField
+              label="Streaming TV"
+              name="StreamingTV"
+              value={formData.StreamingTV}
+              options={serviceOptions}
+            />
+            <FormField
+              label="Streaming movies"
+              name="StreamingMovies"
+              value={formData.StreamingMovies}
+              options={serviceOptions}
+            />
+          </div>
+        </section>
+      </div>
 
-      {/* Billing Section */}
-      <FormSection title="Billing">
-        <FormField
-          label="Contract"
-          name="Contract"
-          options={['Month-to-month', 'One year', 'Two year']}
-          value={formData.Contract}
-          onChange={handleInputChange}
-        />
-        <FormField
-          label="Paperless Billing"
-          name="PaperlessBilling"
-          options={['Yes', 'No']}
-          value={formData.PaperlessBilling}
-          onChange={handleInputChange}
-        />
-        <FormField
-          label="Payment Method"
-          name="PaymentMethod"
-          options={[
-            'Electronic check',
-            'Mailed check',
-            'Bank transfer (automatic)',
-            'Credit card (automatic)',
-          ]}
-          value={formData.PaymentMethod}
-          onChange={handleInputChange}
-        />
-      </FormSection>
-
-      {/* Action Buttons */}
-      <div className="flex gap-4 mt-8 flex-col sm:flex-row">
-        <button
-          type="submit"
-          disabled={submitLoading}
-          className="btn-primary flex-1 flex items-center justify-center gap-2"
-        >
-          {submitLoading && <Loader className="w-5 h-5 animate-spin" />}
-          {submitLoading ? '⏳ Making Prediction...' : '🚀 Get Prediction'}
+      <div className="flex flex-col gap-3 sm:flex-row">
+        <button type="submit" disabled={submitLoading} className="btn-primary flex-1 gap-2">
+          {submitLoading && <Loader className="animate-spin" size={16} />}
+          {submitLoading ? 'Generating prediction...' : 'Generate prediction'}
         </button>
-        <button
-          type="button"
-          onClick={handleReset}
-          className="btn-secondary flex-1"
-        >
-          🔄 Reset Form
+        <button type="button" onClick={handleReset} className="btn-outline flex-1">
+          Reset form
         </button>
       </div>
     </form>

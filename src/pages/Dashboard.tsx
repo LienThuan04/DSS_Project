@@ -1,29 +1,40 @@
 import React, { useEffect, useState } from 'react';
 import {
-  BarChart,
   Bar,
-  PieChart,
-  Pie,
+  BarChart,
+  CartesianGrid,
   Cell,
+  Pie,
+  PieChart,
+  ResponsiveContainer,
+  Tooltip,
   XAxis,
   YAxis,
-  CartesianGrid,
-  Tooltip,
-  ResponsiveContainer,
 } from 'recharts';
+import { AlertCircle, AlertTriangle, BarChart3, Loader, TrendingUp, Users } from 'lucide-react';
 import { customersApi, predictionsApi } from '../services/api';
 import { Stats } from '../types';
-import { AlertCircle, Loader } from 'lucide-react';
 import ChurnByContractChart from '../components/ChurnByContractChart';
 import ChurnByInternetServiceChart from '../components/ChurnByInternetServiceChart';
 import ChurnByPaymentMethodChart from '../components/ChurnByPaymentMethodChart';
 
-const StatCard = ({ label, value, color = 'from-blue-500 to-cyan-500' }: any) => (
-  <div className="card bg-gradient-to-br from-white/90 to-blue-50/50 border-l-4 border-purple-500 group hover:shadow-lg">
-    <div className="flex items-center justify-between">
+interface StatCardProps {
+  label: string;
+  value: string | number;
+  helper: string;
+  icon: React.ElementType;
+}
+
+const StatCard: React.FC<StatCardProps> = ({ label, value, helper, icon: Icon }) => (
+  <div className="stat-card">
+    <div className="flex items-start justify-between gap-4">
       <div>
-        <p className="text-sm font-semibold text-slate-600 uppercase tracking-wide">{label}</p>
-        <p className={`mt-3 text-4xl font-black bg-gradient-to-r ${color} bg-clip-text text-transparent`}>{value}</p>
+        <p className="text-sm font-medium text-slate-500">{label}</p>
+        <p className="mt-3 text-3xl font-semibold tracking-tight text-slate-900">{value}</p>
+        <p className="mt-2 text-sm text-slate-500">{helper}</p>
+      </div>
+      <div className="flex size-11 items-center justify-center rounded-2xl bg-slate-900 text-white">
+        <Icon size={18} />
       </div>
     </div>
   </div>
@@ -58,100 +69,182 @@ const Dashboard: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center rounded-2xl bg-gradient-to-r from-purple-100 to-blue-100 p-12">
-        <Loader className="animate-spin text-purple-600" size={48} />
+      <div className="empty-state min-h-[420px]">
+        <Loader className="mb-4 animate-spin text-slate-900" size={28} />
+        <p className="text-sm text-slate-500">Loading dashboard metrics...</p>
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="rounded-2xl border-2 border-red-200 bg-gradient-to-r from-red-50 to-pink-50 p-6">
-        <div className="flex items-center gap-3">
-          <AlertCircle className="text-red-600" size={24} />
-          <p className="text-lg font-semibold text-red-700">{error}</p>
+      <div className="section-card p-6">
+        <div className="flex items-start gap-3 text-red-700">
+          <AlertCircle className="mt-0.5" size={20} />
+          <div>
+            <p className="font-medium">Unable to load dashboard</p>
+            <p className="mt-1 text-sm text-red-600">{error}</p>
+          </div>
         </div>
       </div>
     );
   }
 
   const churnData = [
-    { name: 'Retained', value: customerStats?.retained || 0, fill: '#4caf50' },
-    { name: 'Churned', value: customerStats?.churned || 0, fill: '#f44336' },
+    { name: 'Retained', value: customerStats?.retained || 0, fill: '#0f172a' },
+    { name: 'Churned', value: customerStats?.churned || 0, fill: '#ef4444' },
   ];
 
   const riskData = [
-    { name: 'High Risk', value: predictionStats?.highRisk || 0, fill: '#f44336' },
-    { name: 'Medium Risk', value: predictionStats?.mediumRisk || 0, fill: '#ff9800' },
-    { name: 'Low Risk', value: predictionStats?.lowRisk || 0, fill: '#4caf50' },
+    { name: 'High Risk', value: predictionStats?.highRisk || 0, fill: '#ef4444' },
+    { name: 'Medium Risk', value: predictionStats?.mediumRisk || 0, fill: '#f59e0b' },
+    { name: 'Low Risk', value: predictionStats?.lowRisk || 0, fill: '#10b981' },
   ];
 
   return (
     <div className="space-y-6">
-      <div className="mb-4">
-        <h1 className="text-4xl font-black gradient-text">Dashboard</h1>
-        <p className="mt-2 text-lg text-slate-600 font-medium">Customer churn prediction overview</p>
-      </div>
+      <section className="section-card bg-grid overflow-hidden p-6 md:p-8">
+        <div className="page-header">
+          <div>
+            <p className="page-kicker">Overview</p>
+            <h1 className="page-title">Customer churn analytics workspace</h1>
+            <p className="page-description">
+              Track active customers, monitor risk concentration and inspect retention patterns
+              across contracts, internet services and payment methods.
+            </p>
+          </div>
 
-      {/* Stats Grid */}
-      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
-        <StatCard label="Total Customers" value={customerStats?.totalCustomers || 0} color="from-blue-500 to-cyan-500" />
-        <StatCard label="Churn Rate" value={customerStats?.churnRate || '0%'} color="from-orange-500 to-red-500" />
-        <StatCard label="Total Predictions" value={predictionStats?.totalPredictions || 0} color="from-emerald-500 to-teal-500" />
-        <StatCard label="High Risk" value={predictionStats?.highRisk || 0} color="from-pink-500 to-red-500" />
-      </div>
+          <div className="grid gap-3 sm:grid-cols-2">
+            <div className="rounded-2xl border bg-white/80 p-4 backdrop-blur">
+              <p className="text-xs font-semibold uppercase tracking-[0.22em] text-slate-500">
+                Current churn rate
+              </p>
+              <p className="mt-2 text-2xl font-semibold text-slate-900">
+                {customerStats?.churnRate || '0%'}
+              </p>
+            </div>
+            <div className="rounded-2xl border bg-white/80 p-4 backdrop-blur">
+              <p className="text-xs font-semibold uppercase tracking-[0.22em] text-slate-500">
+                High-risk predictions
+              </p>
+              <p className="mt-2 text-2xl font-semibold text-slate-900">
+                {predictionStats?.highRisk || 0}
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
 
-      {/* Charts */}
-      <div className="grid gap-6 lg:grid-cols-2">
-        {/* Churn Distribution */}
-        <div className="card">
-          <h2 className="mb-4 text-lg font-semibold text-gray-900">Churn Distribution</h2>
-          <ResponsiveContainer width="100%" height={300}>
+      <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+        <StatCard
+          label="Total Customers"
+          value={customerStats?.totalCustomers || 0}
+          helper="All customers available in the dataset."
+          icon={Users}
+        />
+        <StatCard
+          label="Churn Rate"
+          value={customerStats?.churnRate || '0%'}
+          helper="Overall attrition ratio across the customer base."
+          icon={TrendingUp}
+        />
+        <StatCard
+          label="Predictions"
+          value={predictionStats?.totalPredictions || 0}
+          helper="Stored churn predictions generated from the app."
+          icon={BarChart3}
+        />
+        <StatCard
+          label="High Risk"
+          value={predictionStats?.highRisk || 0}
+          helper="Customers needing immediate retention attention."
+          icon={AlertTriangle}
+        />
+      </section>
+
+      <section className="grid gap-6 xl:grid-cols-2">
+        <div className="section-card p-6">
+          <div className="mb-6">
+            <p className="page-kicker">Distribution</p>
+            <h2 className="text-xl font-semibold text-slate-900">Churn composition</h2>
+          </div>
+
+          <ResponsiveContainer width="100%" height={280}>
             <PieChart>
               <Pie
                 data={churnData}
-                cx="50%"
-                cy="50%"
-                labelLine={false}
-                label={({ name, value }) => `${name}: ${value}`}
-                outerRadius={80}
-                fill="#8884d8"
                 dataKey="value"
+                innerRadius={60}
+                outerRadius={92}
+                paddingAngle={3}
               >
-                {churnData.map((entry, index) => (
-                  <Cell key={`cell-${index}`} fill={entry.fill} />
+                {churnData.map((entry) => (
+                  <Cell key={entry.name} fill={entry.fill} />
                 ))}
               </Pie>
               <Tooltip />
             </PieChart>
           </ResponsiveContainer>
+
+          <div className="mt-6 grid gap-3 sm:grid-cols-2">
+            {churnData.map((item) => (
+              <div key={item.name} className="rounded-2xl border bg-slate-50 p-4">
+                <div className="flex items-center gap-2">
+                  <span
+                    className="inline-flex size-3 rounded-full"
+                    style={{ backgroundColor: item.fill }}
+                  />
+                  <span className="text-sm font-medium text-slate-600">{item.name}</span>
+                </div>
+                <p className="mt-3 text-2xl font-semibold text-slate-900">{item.value}</p>
+              </div>
+            ))}
+          </div>
         </div>
 
-        {/* Risk Distribution */}
-        <div className="card">
-          <h2 className="mb-4 text-lg font-semibold text-gray-900">Risk Level Distribution</h2>
-          <ResponsiveContainer width="100%" height={300}>
+        <div className="section-card p-6">
+          <div className="mb-6">
+            <p className="page-kicker">Risk Levels</p>
+            <h2 className="text-xl font-semibold text-slate-900">Prediction distribution</h2>
+          </div>
+
+          <ResponsiveContainer width="100%" height={280}>
             <BarChart data={riskData}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-              <XAxis dataKey="name" />
-              <YAxis />
+              <CartesianGrid stroke="#e2e8f0" vertical={false} />
+              <XAxis dataKey="name" tickLine={false} axisLine={false} />
+              <YAxis tickLine={false} axisLine={false} />
               <Tooltip />
-              <Bar dataKey="value" fill="#8884d8" radius={[8, 8, 0, 0]}>
-                {riskData.map((entry, index) => (
-                  <Cell key={`cell-${index}`} fill={entry.fill} />
+              <Bar dataKey="value" radius={[10, 10, 0, 0]}>
+                {riskData.map((entry) => (
+                  <Cell key={entry.name} fill={entry.fill} />
                 ))}
               </Bar>
             </BarChart>
           </ResponsiveContainer>
-        </div>
-      </div>
 
-      {/* Segmentation Charts */}
-      <div className="grid gap-6 lg:grid-cols-3">
-        <ChurnByContractChart />
-        <ChurnByInternetServiceChart />
-        <ChurnByPaymentMethodChart />
-      </div>
+          <div className="mt-6 grid gap-3 sm:grid-cols-3">
+            {riskData.map((item) => (
+              <div key={item.name} className="rounded-2xl border bg-slate-50 p-4">
+                <p className="text-sm font-medium text-slate-600">{item.name}</p>
+                <p className="mt-2 text-2xl font-semibold text-slate-900">{item.value}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <section className="space-y-4">
+        <div>
+          <p className="page-kicker">Segments</p>
+          <h2 className="text-xl font-semibold text-slate-900">Churn by business dimension</h2>
+        </div>
+
+        <div className="grid gap-6 xl:grid-cols-3">
+          <ChurnByContractChart />
+          <ChurnByInternetServiceChart />
+          <ChurnByPaymentMethodChart />
+        </div>
+      </section>
     </div>
   );
 };
