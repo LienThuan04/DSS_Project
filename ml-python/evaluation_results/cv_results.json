@@ -1,7 +1,7 @@
 {
   "model_name": "Decision Tree",
   "n_splits": 5,
-  "timestamp": "2026-04-07T20:31:48.919248",
+  "timestamp": "2026-04-09T00:50:53.760014",
   "folds": [
     {
       "fold": 1,
